@@ -1,10 +1,3 @@
 # Test Generation
 
-```text
-K|CASE1 valid request -> ACCEPTED and service called once
-K|CASE2 missing processId -> behavior pending orchestrator decision
-T|Implement CASE1 only
-R|CASE2 expected behavior
-```
-
-The worker creates CASE1 and returns an `H` record for CASE2 instead of guessing validation semantics.
+The orchestrator or `verification-test-gap-finder` produces an approved case matrix. `execution-test-writer` receives DCP/2 with expected behavior, mocks, editable test symbols, an authorized targeted command, and reserved production decisions. It never changes expected results to obtain green tests.

@@ -1,36 +1,25 @@
-# DreamTeam for Claude Code
+# DreamTeam for Claude Code 0.2
 
-This adapter packages the DreamTeam core as a Claude Code plugin and marketplace entry.
-
-## Development
+Development:
 
 ```bash
 claude --plugin-dir ./adapters/claude-code/plugins/dreamteam
 ```
 
-Inside Claude Code:
+Commands:
 
 ```text
-/dreamteam:run profile=balanced <task>
+/dreamteam:run profile=offload <task>
 /dreamteam:review
 /dreamteam:measure
+/dreamteam:doctor
 ```
 
-## Marketplace
-
-The repository root contains `.claude-plugin/marketplace.json`, so after publishing:
+Marketplace:
 
 ```text
 /plugin marketplace add RcomaShow/dreamteam-agent-toolkit
 /plugin install dreamteam@dreamteam-tools
 ```
 
-## Model mapping
-
-The default adapter maps specialized workers to the `haiku` alias and keeps the current main session as orchestrator. This mapping is adapter-specific; the DreamTeam core does not require a vendor or model family.
-
-An environment-level Claude Code subagent override can supersede per-agent model fields. Check your Claude Code configuration if workers do not use the expected model.
-
-## Safety
-
-No hooks, MCP servers, monitors, or automatic commands are bundled. Write agents have narrow tool allowlists. Shell access is limited to test and failure roles and remains subject to Claude Code permissions.
+The default adapter maps specialized workers to `haiku` and keeps the current session as final orchestrator. An environment-level subagent override may supersede per-agent mappings; use `/dreamteam:doctor` to inspect the effective setup.

@@ -1,17 +1,11 @@
-# Codex Adapter — Planned
+# Codex Adapter
 
-This directory will map DreamTeam core concepts to Codex capabilities.
+Planned adapter requirements:
 
-A conforming adapter must define:
+- render DCP/2 contracts into bounded worker instructions;
+- parse CHP/2 handoffs and TLP/2 state;
+- map M0/L1/L2/C3 ownership to Codex capabilities;
+- preserve constitution `DT-C1` and route semantics;
+- expose usage, duplicate-read, and quality-gate metrics where available.
 
-- orchestrator entry point;
-- worker registration and invocation;
-- tool restrictions;
-- model/cost-tier mapping;
-- continuation or resume behavior;
-- DCP/1 input rendering;
-- CHP/1 output rendering;
-- quality-gate verification;
-- install, update, and security model.
-
-Do not copy Claude Code-specific fields into this adapter. Reuse `core/` and `workers/` semantics.
+This directory is an extension contract, not a working adapter yet.

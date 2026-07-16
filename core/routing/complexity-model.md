@@ -1,32 +1,25 @@
-# Complexity Model
+# Routing Signals
 
-Score each dimension from 0 to 2.
+DreamTeam 0.2 uses hard gates and code criticality before heuristics.
 
-| Dimension | 0 | 1 | 2 |
-|---|---|---|---|
-| Volume `V` | 1–2 local files | 3–5 files or moderate log | 6+ files or large output |
-| Repeatability `M` | novel | partly patterned | highly mechanical |
-| Specification clarity `S` | ambiguous | some decisions fixed | closed contract |
-| Logical complexity `C` | trivial | branching | distributed/concurrent/transactional |
-| Risk `R` | reversible/local | public behavior | security/data/production |
-| Delegation overhead `O` | high relative to task | moderate | low relative to task |
+## Hard gates
 
-Suggested delegation signal:
+C3 work is orchestrator-owned. Missing acceptance criteria, ambiguous semantics, or a delegation contract comparable to the implementation also select direct work.
 
-```text
-signal = V + M + S + O - C - R
-```
+## Benefit signals
 
-Delegate when `signal >= 3` and no hard stop applies. This is an operational heuristic, not a token estimator.
+After hard gates, estimate:
 
-## Hard stops for lower-capability workers
+- context volume;
+- repeatability;
+- specification clarity;
+- decision density;
+- expected compression ratio;
+- expected main reread ratio;
+- delegation tax.
 
-- business semantics not defined;
-- public API/event contract design;
-- security or authorization;
-- data ownership or schema migration;
-- transaction boundaries;
-- idempotency, retry, compensation, or offset semantics;
-- concurrency;
-- destructive operations;
-- dependency or build-system changes without explicit approval.
+Use qualitative `LOW`, `MEDIUM`, or `HIGH` values. Do not present the result as a token prediction.
+
+## Routing outcome
+
+Emit one route and one criticality class. Explain the expected work avoided in the main context and the primary risk of delegation.

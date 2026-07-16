@@ -1,24 +1,15 @@
-# Architecture
+# Architecture 0.2
 
-DreamTeam uses a hub-and-spoke model.
+DreamTeam uses a hub-and-spoke model with one final orchestrator. Workers never call each other.
 
-- The orchestrator interprets requirements, owns decisions, reviews output, and verifies completion.
-- Workers are specialized, bounded, and disposable or resumable depending on the runtime.
-- Workers do not call each other.
-- The compact handoff is the only required inter-worker interface.
-- Adapters translate runtime-specific models, tools, permissions, files, and invocation syntax.
+## Stable layers
 
-## Stable core vs adapters
+- constitution: common authority, evidence, scope, and ownership principles;
+- routing: code criticality and execution routes;
+- protocols: closed delegation and compact handoff;
+- worker charters: narrow roles and tool boundaries;
+- adapters: runtime-specific model, tools, files, and invocation syntax.
 
-Core stability allows a routing policy or worker prompt to be evaluated across platforms. Adapter code may change frequently as each agent runtime evolves.
+## Ownership
 
-## Extension points
-
-- new worker role;
-- new cost/quality profile;
-- model mapping;
-- alternative handoff serialization;
-- persistent ledger;
-- evaluation harness;
-- platform adapter;
-- optional deterministic validation or log filtering.
+Every task declares read owner, edit owner, and review owner. Every code region has one active edit owner. M0/L1 are worker-eligible; L2 uses hybrid ownership; C3 remains orchestrator-owned.

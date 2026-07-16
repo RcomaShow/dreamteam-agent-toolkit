@@ -1,15 +1,17 @@
 # Economy Profile
 
-Use when cost reduction is the primary objective and the task is well specified.
+Primary target: minimize total usage and delegation overhead.
 
 ```text
+optimization_target=total_tokens
 max_active_workers=1
+max_worker_chain=1
 max_worker_turns=6
 max_deep_reads=6
-max_output_records=20
+max_output_records=16
 max_retries=1
 parallelism=off
-orchestrator_verification=critical_evidence_and_diff
+orchestrator_verification=critical_evidence_diff_and_targeted_checks
 ```
 
-Escalate early. Do not trade correctness for a forced worker completion.
+Prefer MAIN_DIRECT for small tasks and a single worker only for clearly beneficial work.

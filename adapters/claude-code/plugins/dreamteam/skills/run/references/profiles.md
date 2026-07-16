@@ -1,43 +1,76 @@
 # Economy Profile
 
-Use when cost reduction is the primary objective and the task is well specified.
+Primary target: minimize total usage and delegation overhead.
 
 ```text
+optimization_target=total_tokens
 max_active_workers=1
+max_worker_chain=1
 max_worker_turns=6
 max_deep_reads=6
-max_output_records=20
+max_output_records=16
 max_retries=1
-parallelism=off
-orchestrator_verification=critical_evidence_and_diff
-```
-
-Escalate early. Do not trade correctness for a forced worker completion.
-
-# Balanced Profile
-
-Default profile for normal engineering work.
-
-```text
-max_active_workers=1
-max_worker_turns=10
-max_deep_reads=10
-max_output_records=35
-max_retries=2
 parallelism=off
 orchestrator_verification=critical_evidence_diff_and_targeted_checks
 ```
 
-# Quality Profile
+Prefer MAIN_DIRECT for small tasks and a single worker only for clearly beneficial work.
 
-Use for broader verification or high-impact work. Critical decisions still remain with the orchestrator.
+# Balanced Profile
+
+Default compromise between total cost, main-model conservation, and confidence.
 
 ```text
-max_active_workers=2
+optimization_target=weighted_cost
+max_active_workers=1
+max_worker_chain=2
+max_worker_turns=10
+max_deep_reads=10
+max_output_records=24
+max_retries=1
+parallelism=off
+orchestrator_verification=critical_evidence_diff_and_targeted_checks
+```
+
+# Offload Profile
+
+Primary target: reduce high-capability/main-model work while preserving verified quality.
+
+```text
+optimization_target=main_model_tokens
+max_active_workers=1
+max_worker_chain=3
+max_worker_turns=10
+max_deep_reads=12
+max_output_records=28
+max_retries=1
+parallelism=off
+nested_agents=off
+prefer_worker_for_search=true
+prefer_worker_for_logs=true
+prefer_worker_for_scaffolding=true
+prefer_worker_for_bounded_logic=true
+prefer_worker_for_tests=true
+prefer_worker_for_diff_classification=true
+orchestrator_max_critical_references=4
+orchestrator_avoid_duplicate_reads=true
+```
+
+C3 code remains orchestrator-owned in every profile.
+
+# Quality Profile
+
+Primary target: quality and risk reduction, while still avoiding unnecessary bulk work in the main context.
+
+```text
+optimization_target=quality
+max_active_workers=1
+max_worker_chain=3
 max_worker_turns=14
 max_deep_reads=16
-max_output_records=50
+max_output_records=36
 max_retries=2
-parallelism=independent_scopes_only
-orchestrator_verification=all_decision_evidence_diff_and_acceptance_checks
+parallelism=off
+high_capability_worker=allowed_when_explicitly_justified
+orchestrator_verification=expanded
 ```

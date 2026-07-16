@@ -1,0 +1,17 @@
+DCP|2
+RUN|
+TASK|
+CONST|DT-C1
+PROFILE|balanced
+G|
+S+|
+S-|
+E+|
+E-|
+I|
+K|
+T|
+R|
+V|
+B|files=;deep_reads=;turns=;records=;retries=
+O|

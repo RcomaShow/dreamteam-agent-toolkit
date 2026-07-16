@@ -1,12 +1,29 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "DreamTeam Compact Handoff",
+  "title": "DreamTeam CHP/2 Handoff",
   "type": "object",
+  "additionalProperties": false,
   "required": [
+    "protocol",
+    "runId",
+    "taskId",
+    "contract",
     "status",
     "next"
   ],
   "properties": {
+    "protocol": {
+      "const": "CHP/2"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "taskId": {
+      "type": "string"
+    },
+    "contract": {
+      "type": "string"
+    },
     "status": {
       "enum": [
         "DONE",
@@ -15,31 +32,42 @@
         "FAILED"
       ]
     },
+    "reason": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "source",
+          "claim"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "FACT",
+              "DEDUCTION",
+              "ASSUMPTION",
+              "UNKNOWN"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "claim": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "changes": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "facts": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "deductions": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "assumptions": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "unknowns": {
       "type": "array",
       "items": {
         "type": "object"
@@ -57,7 +85,7 @@
         "type": "object"
       }
     },
-    "warnings": {
+    "risks": {
       "type": "array",
       "items": {
         "type": "object"
@@ -66,6 +94,5 @@
     "next": {
       "type": "string"
     }
-  },
-  "additionalProperties": false
+  }
 }

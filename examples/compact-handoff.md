@@ -1,12 +1,14 @@
-# Compact Handoff Example
+# Compact CHP/2 Handoff
 
 ```text
-S|PARTIAL|Scaffold implemented; error semantics reserved
-C|C1|OutputActivationRequest.java|Created record
-C|C2|OutputActivationResource.java|Added POST and service delegation
-F|F1|ExistingResource#start|Project uses constructor injection
-D|D1|F1|New resource follows constructor injection convention
-H|H1|contract|OutputActivationResource#activate|Choose 409 or idempotent 200|Error mapper and two tests
-V|V1|NR|compile|Builder has no shell tool
-N|ORCHESTRATOR|Resolve H1, inspect C1-C2, compile
+CHP|2
+RUN|dt-42
+TASK|map-status
+CONTRACT|sha256:example
+S|PARTIAL|mapping implemented; unknown status semantics reserved
+E|E1|FACT|StatusMapper#map|ACTIVE maps to ENABLED
+C|C1|StatusMapper#map|implemented approved mappings
+H|H1|business|StatusMapper#map|define NEW status mapping|one branch and test
+V|V1|PASS|StatusMapperTest|4 approved cases passed
+N|ORCHESTRATOR|decide H1 and review bounded logic
 ```

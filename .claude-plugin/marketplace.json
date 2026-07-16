@@ -3,12 +3,12 @@
   "owner": {
     "name": "RcomaShow"
   },
-  "description": "DreamTeam adapters and tools for cost-aware, quality-gated agent orchestration.",
+  "description": "DreamTeam adapters for constitution-guided, token-aware orchestration and main-model offload.",
   "plugins": [
     {
       "name": "dreamteam",
       "source": "./adapters/claude-code/plugins/dreamteam",
-      "description": "Token-aware routing, compact handoffs, and specialized workers for Claude Code."
+      "description": "Explicit routing, compact protocols, and specialized low-cost workers for Claude Code."
     }
   ]
 }

@@ -1,11 +1,11 @@
 # Generic CLI Adapter
 
-A runtime-neutral integration can implement:
+A future reference interface could expose:
 
 ```text
-dreamteam run --profile balanced --task task.md
-dreamteam worker repo-scout --contract contract.dcp
-dreamteam validate handoff.chp
+dreamteam run --profile offload --task task.txt
+dreamteam worker discovery-flow-tracer --contract contract.dcp2
+dreamteam validate handoff.chp2
 ```
 
-The orchestrator should persist a TLP/1 ledger and pass closed DCP/1 contracts to workers. Worker stdout should be valid CHP/1 records. This directory is a placeholder for a future reference implementation.
+The orchestrator persists TLP/2, passes closed DCP/2 contracts, and accepts only valid CHP/2 output. This directory is a placeholder for a future implementation.

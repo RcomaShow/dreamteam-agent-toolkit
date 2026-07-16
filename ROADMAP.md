@@ -1,23 +1,21 @@
 # Roadmap
 
-## 0.2
+## 0.2 — Charter and Offload
+
+- Constitution, protocol validation, explicit code ownership, specialized Haiku workers, and main-model offload.
+
+## 0.3 — Evaluation
 
 - Real-task benchmark harness.
-- Per-worker evaluation fixtures.
-- Optional log filters with explicit opt-in.
-- Configurable worker-model mapping in the Claude Code adapter.
-- Additional compact protocol validators.
+- Per-worker behavioral fixtures.
+- Routing accuracy, compression, reread, and quality-parity reports.
+- Optional deterministic log filtering and scope guards, disabled by default.
 
-## 0.3
+## 0.4 — Additional adapters
 
-- Codex adapter prototype.
-- Gemini CLI adapter prototype.
-- Machine-readable orchestration event log.
-- Worker continuation/resume guidance per runtime.
+- Codex and Gemini CLI prototypes.
+- Cross-adapter conformance tests.
 
 ## 1.0
 
-- Stable core protocol.
-- Cross-adapter conformance tests.
-- Published benchmark methodology.
-- Security review and signed release artifacts.
+- Stable core protocols and published benchmark methodology.

@@ -1,13 +1,20 @@
-# Delegation Contract Protocol — DCP/1
+# Delegation Contract Protocol — DCP/2
 
-A worker receives a closed contract. Omit unused records.
+DCP/2 is a compact, line-oriented contract. Use one semantic item per record and omit unused optional records.
 
 ```text
-G|<goal>
-S+|<allowed scope>
-S-|<excluded scope>
+DCP|2
+RUN|<run-id>
+TASK|<task-id>
+CONST|DT-C1
+PROFILE|<economy|balanced|offload|quality>
+G|<verifiable goal>
+S+|<allowed path or scope>
+S-|<excluded path or scope>
+E+|<editable path#symbol>
+E-|<reserved path#symbol>
 I|<input or verified reference>
-K|<decision already made>
+K|<authoritative decision>
 T|<requested action>
 R|<decision reserved to orchestrator>
 V|<allowed verification>
@@ -17,85 +24,59 @@ O|<required output>
 
 ## Rules
 
-- One semantic item per record.
-- `K` is authoritative; the worker applies it without reinterpretation.
-- `R` marks a hard boundary. The worker may gather evidence but must not decide.
-- `S+` is closed: files outside it require handoff.
-- A missing decision is not permission to invent one.
+- `K` is authoritative and applied without reinterpretation.
+- `R` and `E-` are hard boundaries.
+- `S+` and `E+` are closed; expansion requires handoff.
+- Missing semantics are not permission to invent them.
 - Budgets are upper bounds, not targets.
-- Use stable references such as `path`, `Class#method`, or record IDs.
+- Stable references use `path`, `Class#method`, or record IDs.
+- Escape `\\`, `\|`, and `\n` as defined in `escaping.md`.
+- Compute a SHA-256 hash of the normalized contract when deterministic tooling is available.
 
-## Example
+# Compact Handoff Protocol — CHP/2
 
-```text
-G|Create the request model and mapper for output activation
-S+|src/main/java/com/acme/output/dto;src/main/java/com/acme/output/mapper
-S-|pom.xml;application.properties
-I|ExistingActivationMapper.java
-K|Fields are processId, activationType, requestedBy
-T|Create request record and map it to OutputCommand
-R|Validation rules;duplicate handling;public error contract
-V|Compile the affected module
-B|files=4;deep_reads=3;turns=6;records=18;retries=1
-O|Modified files, evidence, verification state, and handoff points
-```
-
-# Compact Handoff Protocol — CHP/1
-
-Workers return a delta, not a narrative recap.
+Workers return a decision-relevant delta, not a narrative recap.
 
 ```text
+CHP|2
+RUN|<run-id>
+TASK|<task-id>
+CONTRACT|<sha256 or UNAVAILABLE>
 S|<DONE|PARTIAL|BLOCKED|FAILED>|<short reason>
-C|<id>|<path or symbol>|<change>
-F|<id>|<path:line or symbol>|<verified fact>
-D|<id>|<supporting record IDs>|<deduction>
-A|<id>|<scope>|<assumption used>
-U|<id>|<scope>|<unknown>
+E|<id>|FACT|<source>|<claim>
+E|<id>|DEDUCTION|<supporting ids>|<claim>
+E|<id>|ASSUMPTION|<scope>|<claim>
+E|<id>|UNKNOWN|<scope>|<claim>
+C|<id>|<path#symbol>|<change>
 H|<id>|<category>|<location>|<decision required>|<blocked work>
 V|<id>|<PASS|FAIL|NR>|<check or command>|<result>
 W|<id>|<risk>|<evidence>
-N|<ORCHESTRATOR|WORKER:<role>|<next action>
+N|<ORCHESTRATOR|WORKER:role>|<next action>
 ```
 
 ## Precision rules
 
-- `F` requires direct evidence.
-- `D` cites the `F` records that support it.
-- `A` is permitted only when the contract allows it.
-- `U` must not become a fact later.
-- `H` gives the exact decision and affected work.
-- `V|NR` means not run; never imply success.
-- `DONE` means contracted worker work is complete, not that the whole task is production-ready.
+- `FACT` requires direct evidence.
+- `DEDUCTION` cites existing evidence IDs.
+- `ASSUMPTION` is allowed only when the contract permits it.
+- `UNKNOWN` never silently becomes a fact.
+- `DONE` means the worker contract is complete, not that the whole task is production-ready.
+- `DONE` must not contain unresolved `H` records.
+- `PASS` names the actual check; `NR` means not run.
 - Do not repeat the contract, user request, or previously acknowledged records.
+- Escape fields according to `escaping.md`.
 
-## Example
+# DCP/2 and CHP/2 Escaping
 
-```text
-S|PARTIAL|Mechanical structures created; duplicate semantics unresolved
-C|C1|OutputActivationRequest.java|Created record with agreed fields
-C|C2|OutputActivationMapper.java|Added field-for-field mapping
-F|F1|OutputService#activate|Existing branch calls findByProcessId
-H|H1|business|OutputService#activate|Choose reject or return existing|Service branch and two tests
-V|V1|NR|module compile|Shell not available to this worker
-N|ORCHESTRATOR|Decide H1, review diff, then delegate remaining tests
-```
+Protocols use `|` as a field separator.
 
-# Task Ledger Protocol — TLP/1
-
-The orchestrator maintains a compact state ledger across delegations.
+Within a field encode:
 
 ```text
-TASK|<id>|<owner>|<PENDING|ACTIVE|DONE|BLOCKED>|<scope>
-DEC|<id>|<decision>|<evidence IDs>|<impact>
-OPEN|<id>|<owner>|<required action>|<blocked task IDs>
-CHK|<id>|<PASS|FAIL|NR>|<verification>
-WORKER|<id>|<role>|<scope>|<ACTIVE|PAUSED|CLOSED>
+\\  -> backslash
+\|  -> literal pipe
+\n  -> newline
+\r  -> carriage return
 ```
 
-## Rules
-
-- Record only state needed for the next action.
-- Replace stale records instead of appending duplicate prose.
-- Reference handoff IDs instead of copying their content.
-- Resume the same worker context when the runtime supports it and the scope is unchanged.
-- Start a new worker when ownership, component, or goal changes.
+Unknown escape sequences are invalid. Records are UTF-8 and one physical line each. Empty trailing fields are preserved. Parsers must reject unsupported versions, duplicate evidence/change/handoff IDs, invalid references, and malformed status records.

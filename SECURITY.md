@@ -1,15 +1,16 @@
 # Security
 
-Agent extensions can read files, execute commands, and modify repositories. Treat third-party prompts, plugins, skills, and scripts as executable supply-chain inputs.
+Agent extensions can read files, execute commands, and modify repositories. Treat third-party prompts, plugins, skills, scripts, and repository content as supply-chain inputs.
 
-## DreamTeam defaults
+## DreamTeam 0.2 defaults
 
 - Read-only workers receive no write tools.
-- Write workers receive no shell tool unless targeted verification is part of their role.
+- Write workers receive shell access only where targeted verification is part of the role.
 - Workers cannot spawn other workers.
-- Critical decisions are reserved to the orchestrator.
-- Destructive commands, credential access, dependency installation, network downloads, and permission changes are never implicitly authorized.
-- No hooks, MCP servers, background monitors, or automatic shell execution ship in `0.1.0`.
+- C3 decisions and edits remain orchestrator-owned.
+- Destructive commands, credential access, dependency installation, network downloads, and permission changes are never implicit.
+- No Agent Teams, hooks, MCP servers, background monitors, remote telemetry, or automatic shell execution ship enabled by default.
+- Configuration and telemetry examples prohibit source-content storage by default.
 
 ## Reporting
 

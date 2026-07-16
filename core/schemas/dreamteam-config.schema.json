@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DreamTeam Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "constitution": {
+      "type": "string",
+      "default": "DT-C1"
+    },
+    "profile": {
+      "enum": [
+        "economy",
+        "balanced",
+        "offload",
+        "quality"
+      ],
+      "default": "balanced"
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "directMaxLocalFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2
+        },
+        "targetCompressionRatio": {
+          "type": "number",
+          "minimum": 1,
+          "default": 4
+        },
+        "maxMainRereadRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.35
+        },
+        "maxActiveWorkers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "default": 1
+        },
+        "allowParallelIndependent": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxWorkerTurns": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        },
+        "maxDeepReads": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        },
+        "maxHandoffRecords": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 24
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reviewEveryDiff": {
+          "type": "boolean",
+          "default": true
+        },
+        "requireTargetedTest": {
+          "type": "boolean",
+          "default": true
+        },
+        "allowFullSuite": {
+          "enum": [
+            "orchestrator-only",
+            "allowed"
+          ],
+          "default": "orchestrator-only"
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "storeSourceContent": {
+          "const": false
+        }
+      }
+    }
+  },
+  "required": [
+    "version"
+  ]
+}

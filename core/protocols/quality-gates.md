@@ -1,24 +1,25 @@
 # Quality Gates
 
-Use explicit states; avoid the ambiguous word `complete`.
+Use explicit states; never use the ambiguous word `complete` as a quality claim.
 
 ```text
-SCOPED       Contract and boundaries are explicit
+SCOPED       Contract, ownership, and boundaries are explicit
 IMPLEMENTED  Requested edits exist
 COMPILED     Targeted compilation passed
 TESTED       Targeted tests passed
-REVIEWED     Orchestrator inspected the diff and decisions
-VERIFIED     Required end-to-end or acceptance check passed
+REVIEWED     Orchestrator inspected consequential changes and decisions
+VERIFIED     Required acceptance or end-to-end check passed
 ```
 
-A worker may report only gates it actually performed. Final task success requires the gates defined by the orchestrator before delegation.
+A worker reports only gates it actually performed. Final success requires the gates defined before delegation.
 
-## Minimum gates by work type
+## Minimum final gates
 
-| Work type | Minimum worker gate | Final orchestrator gate |
+| Work class | Worker ownership | Final orchestrator gate |
 |---|---|---|
-| Read-only exploration | Evidence references | Critical references reviewed |
-| Boilerplate | Implemented | Compiled + reviewed |
-| Mechanical edit | Implemented | Diff reviewed + targeted check |
-| Test writing | Target test passed where authorized | Production behavior reviewed |
-| Failure triage | Root cause confidence and evidence | Corrective change verified |
+| M0 mechanical | Worker | Diff classification + targeted check |
+| L1 bounded logic | Worker | Behavior review + targeted tests |
+| L2 mixed logic | Hybrid | Direct review of critical regions + tests |
+| C3 consequential | Orchestrator | Direct implementation/review + required checks |
+| Read-only discovery | Worker | Decision-critical references reviewed |
+| Failure triage | Worker | Corrective change verified |

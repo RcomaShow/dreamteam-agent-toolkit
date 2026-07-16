@@ -1,26 +1,16 @@
-# Creating an Adapter
+# Creating a DreamTeam Adapter
 
-An adapter maps DreamTeam core semantics to a platform.
+An adapter maps stable core concepts to a runtime without changing their meaning.
 
-## Required mapping
-
-| DreamTeam concept | Adapter responsibility |
+| Core concept | Adapter responsibility |
 |---|---|
-| Orchestrator | Main agent/session entry point |
-| Worker | Subagent, subprocess, API call, or task |
-| Cost tier | Platform model selector |
-| Tool boundary | Runtime permissions/tool allowlist |
-| DCP/1 | Worker prompt or structured input |
-| CHP/1 | Parsed worker output |
-| TLP/1 | Session or persistent state |
-| Quality gate | Runtime command/check integration |
-| Resume | Session continuation or rehydration |
+| DT-C1 | Preserve authority and evidence rules |
+| Execution route | Map read/edit/review ownership |
+| M0/L1/L2/C3 | Map criticality to runtime capabilities |
+| DCP/2 | Render closed worker input |
+| CHP/2 | Parse and validate worker output |
+| TLP/2 | Persist compact state and read ownership |
+| Worker charter | Map model, tools, limits, and stop conditions |
+| Quality gate | Run and report actual checks |
 
-## Conformance
-
-- Core documents remain unchanged.
-- Worker cannot silently exceed scope.
-- Facts remain source-linked.
-- Reserved decisions return to orchestrator.
-- Verification states are explicit.
-- Adapter documents security and update behavior.
+Adapters must document model overrides, tool permissions, resume semantics, usage visibility, and unsupported deterministic controls.
