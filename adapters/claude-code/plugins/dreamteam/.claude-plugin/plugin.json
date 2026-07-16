@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "dreamteam",
+  "displayName": "DreamTeam",
+  "version": "0.1.0",
+  "description": "Token-aware routing, compact handoffs, and specialized workers that reduce operational overhead while preserving orchestrator review.",
+  "author": {
+    "name": "RcomaShow",
+    "url": "https://github.com/RcomaShow"
+  },
+  "homepage": "https://github.com/RcomaShow/dreamteam-agent-toolkit",
+  "repository": "https://github.com/RcomaShow/dreamteam-agent-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "orchestration",
+    "token-optimization",
+    "coding",
+    "multi-model",
+    "efficiency"
+  ],
+  "defaultEnabled": true
+}

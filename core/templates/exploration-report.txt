@@ -1,0 +1,7 @@
+S|DONE|
+F|F1|<entry>|<verified responsibility>
+F|F2|<caller>|<verified call>
+D|D1|F1,F2|<bounded deduction>
+U|U1|<scope>|<unresolved information>
+H|H1|<category>|<location>|<decision>|<blocked work>
+N|ORCHESTRATOR|Review decision-critical references only

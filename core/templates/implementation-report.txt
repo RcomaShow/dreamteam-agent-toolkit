@@ -1,0 +1,6 @@
+S|DONE|
+C|C1|<path>|<change>
+A|A1|<scope>|<assumption, or omit>
+H|H1|<category>|<location>|<decision>|<blocked work>
+V|V1|<PASS|FAIL|NR>|<check>|<result>
+N|ORCHESTRATOR|Review diff and run final gates

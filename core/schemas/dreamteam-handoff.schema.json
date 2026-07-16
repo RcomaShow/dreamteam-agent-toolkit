@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DreamTeam Compact Handoff",
+  "type": "object",
+  "required": [
+    "status",
+    "next"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "DONE",
+        "PARTIAL",
+        "BLOCKED",
+        "FAILED"
+      ]
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "deductions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "verification": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "next": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

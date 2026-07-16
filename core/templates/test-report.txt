@@ -1,0 +1,6 @@
+S|DONE|
+C|C1|<test path>|<tests added>
+F|F1|<test name>|<scenario covered>
+V|V1|<PASS|FAIL|NR>|<targeted command>|<result>
+H|H1|behavior|<production symbol>|<ambiguity>|<blocked test>
+N|ORCHESTRATOR|Review expected behavior and final diff

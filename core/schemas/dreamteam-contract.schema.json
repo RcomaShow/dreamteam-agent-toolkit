@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DreamTeam Delegation Contract",
+  "type": "object",
+  "required": [
+    "goal",
+    "allowed_scope",
+    "tasks",
+    "reserved_decisions",
+    "budget"
+  ],
+  "properties": {
+    "goal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowed_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "excluded_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "known_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reserved_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "budget": {
+      "type": "object",
+      "required": [
+        "files",
+        "deep_reads",
+        "turns",
+        "records",
+        "retries"
+      ],
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deep_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "turns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

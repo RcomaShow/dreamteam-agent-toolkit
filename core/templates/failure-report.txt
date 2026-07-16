@@ -1,0 +1,7 @@
+S|DONE|
+F|F1|<log location>|<first causal error>
+D|D1|F1|<root-cause hypothesis and confidence>
+U|U1|<scope>|<missing evidence>
+H|H1|<owner category>|<symbol>|<decision or change>|<blocked verification>
+V|V1|<PASS|FAIL|NR>|<reproduction command>|<result>
+N|ORCHESTRATOR|Confirm D1 or assign the mechanical correction
