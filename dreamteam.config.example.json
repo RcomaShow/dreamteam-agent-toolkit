@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "constitution": "DT-C1",
+  "profile": "offload",
+  "models": {
+    "orchestrator": "inherit",
+    "workers": "haiku"
+  },
+  "routing": {
+    "directMaxLocalFiles": 2,
+    "targetCompressionRatio": 4.0,
+    "maxMainRereadRatio": 0.35,
+    "maxActiveWorkers": 1,
+    "allowParallelIndependent": false
+  },
+  "budgets": {
+    "maxWorkerTurns": 10,
+    "maxDeepReads": 12,
+    "maxHandoffRecords": 28,
+    "maxRetries": 1
+  },
+  "verification": {
+    "reviewEveryDiff": true,
+    "requireTargetedTest": true,
+    "allowFullSuite": "orchestrator-only"
+  },
+  "telemetry": {
+    "enabled": false,
+    "storeSourceContent": false
+  }
+}

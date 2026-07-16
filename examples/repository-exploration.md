@@ -1,17 +1,10 @@
 # Repository Exploration
 
-The orchestrator asks `repo-scout`:
-
 ```text
-G|Find how export completion is persisted
-S+|legacy-export-module
-S-|generated;target
-I|ExportScheduler#run
-T|Trace direct flow, state changes, transaction boundary, retry, and tests
-R|New microservice design;data ownership
-V|Read-only
-B|files=12;deep_reads=10;turns=8;records=30;retries=0
-O|CHP/1 with max four critical references
+ROUTE|WORKER_READ
+CLASS|L2
+WORKER_WORK|locate entry point, then trace bounded legacy flow
+MAIN_WORK|interpret business semantics and migration consequences
 ```
 
-The orchestrator verifies only the cited state transition, transaction boundary, and failure branch before designing the new flow.
+Start with `discovery-symbol-locator`. If the entry point is found, issue a new closed DCP/2 contract to `discovery-flow-tracer`. The orchestrator verifies only the critical references returned in CHP/2.

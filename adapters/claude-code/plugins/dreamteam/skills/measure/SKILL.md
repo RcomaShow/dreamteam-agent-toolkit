@@ -1,38 +1,33 @@
 ---
 name: measure
-description: Design and record an A/B comparison between direct work and DreamTeam delegation using representative tasks, quality gates, context volume, retries, and available Claude Code usage data.
-argument-hint: "<task class or completed task>"
+description: Compare direct work and DreamTeam routes using equal acceptance criteria, main-model and worker usage, duplicate reads, retries, and quality parity.
+argument-hint: "<task class or completed run>"
 disable-model-invocation: true
 ---
 
-# DreamTeam Measure
+# DreamTeam Measure 0.2
 
 Target: `$ARGUMENTS`
 
-Create a fair comparison plan or summarize completed runs.
-
-Record:
+Record equivalent direct and DreamTeam runs:
 
 ```text
-RUN|direct|task|profile|result
-RUN|dreamteam|task|profile|result
+RUN|direct|task|result
+RUN|dreamteam|task|profile|route|result
 METRIC|main_turns|
 METRIC|worker_turns|
-METRIC|files_read_main|
-METRIC|files_read_workers|
+METRIC|main_deep_reads|
+METRIC|worker_deep_reads|
+METRIC|duplicate_deep_reads|
+METRIC|compression_ratio|
+METRIC|main_reread_ratio|
 METRIC|handoff_records|
 METRIC|retries|
 METRIC|quality_gates|
 METRIC|usage_main|
-METRIC|usage_subagents|
+METRIC|usage_workers|
+METRIC|usage_total|
 METRIC|elapsed_observed|
 ```
 
-Rules:
-
-1. Use equivalent task scope and acceptance criteria.
-2. Start clean sessions when comparing context consumption.
-3. Use `/usage` and `/context` when available; label estimates.
-4. A saving is valid only when required quality gates are equal.
-5. Report whether total usage, high-capability-model usage, or both improved.
-6. Identify delegation overhead and the break-even task shape.
+A saving is valid only with equivalent acceptance criteria and quality gates. Report separately total-token, main-model-token, and weighted-cost outcomes. Label estimates.

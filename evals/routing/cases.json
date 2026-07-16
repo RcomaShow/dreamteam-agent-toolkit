@@ -1,0 +1,39 @@
+[
+  {
+    "id": "localized-critical",
+    "task": "change Kafka idempotency in one method",
+    "class": "C3",
+    "route": "MAIN_DIRECT"
+  },
+  {
+    "id": "legacy-trace",
+    "task": "trace a legacy export across twelve files",
+    "class": "L2",
+    "route": "WORKER_READ"
+  },
+  {
+    "id": "dto-scaffold",
+    "task": "create five DTOs from approved signatures",
+    "class": "M0",
+    "route": "WORKER_WRITE"
+  },
+  {
+    "id": "bounded-mapping",
+    "task": "implement an enumerated status mapping and tests",
+    "class": "L1",
+    "route": "WORKER_WRITE"
+  },
+  {
+    "id": "mixed-migration",
+    "task": "scaffold output service while main decides transaction and duplicate semantics",
+    "class": "L2",
+    "route": "HYBRID_EDIT"
+  },
+  {
+    "id": "security-review",
+    "task": "independent security analysis with isolated context",
+    "class": "C3",
+    "route": "HIGH_CAPABILITY_WORKER",
+    "profile": "quality"
+  }
+]

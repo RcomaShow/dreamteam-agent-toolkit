@@ -1,34 +1,37 @@
-# Token-Aware Routing
+# Token-Aware Routing 0.2
 
-Optimize both total tokens and high-cost-model tokens.
-
-## Delegation condition
-
-Delegate only when the expected material kept out of the orchestrator context is meaningfully larger than:
+Optimize separately:
 
 ```text
-worker instructions + context reconstruction + handoff + orchestrator verification
+total_tokens
+main_model_tokens
+weighted_cost
 ```
 
-## Savings mechanisms
+The `offload` profile prioritizes `main_model_tokens`. This may accept modest worker overhead when it prevents the high-capability model from bulk reading, raw-log processing, repetitive implementation, or routine verification.
 
-1. Use a narrow worker prompt.
-2. Read only files that answer a concrete question.
-3. Return record-based deltas, not narrative reports.
-4. Cap deep reads, turns, output records, and retries.
-5. Resume compatible worker contexts instead of restarting.
-6. Do not make the orchestrator reread every worker-read file.
-7. Verify only decision-critical evidence and the final diff.
-8. Keep verbose logs outside the main context.
-9. Avoid model switching in the main session when a separate worker can handle the lower-cost work.
-10. Measure on representative tasks.
+## Expected delegation value
 
-## Anti-patterns
+Delegate only when avoided main-model work is meaningfully larger than:
 
-- delegating a two-minute edit;
-- starting several overlapping scouts;
-- asking a worker to design and implement an ambiguous system;
-- returning long code excerpts already available in the repository;
-- making the orchestrator repeat the entire exploration;
-- retry loops without a new hypothesis;
-- loading all reference documents for every task.
+```text
+worker instructions + context reconstruction + handoff + main verification
+```
+
+Track:
+
+- compression ratio: material processed by worker / handoff size;
+- main reread ratio: worker-read material reread by main / worker-read material;
+- duplicate deep reads;
+- worker and main turns;
+- total and main-model usage;
+- quality parity and retries.
+
+Initial targets for delegable discovery tasks:
+
+```text
+compression_ratio >= 4.0
+main_reread_ratio <= 0.35
+```
+
+These are evaluation targets, not runtime guarantees.

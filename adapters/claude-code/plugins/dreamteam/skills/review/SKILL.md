@@ -1,18 +1,19 @@
 ---
 name: review
-description: Review DreamTeam worker output, verify evidence and diffs, resolve handoffs, and apply final quality gates without repeating the whole delegated investigation.
+description: Review DreamTeam 0.2 routes, CHP/2 handoffs, symbol ownership, worker edits, and final quality gates without reproducing delegated investigations.
 argument-hint: "[optional scope]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Review
+# DreamTeam Review 0.2
 
 Scope: `$ARGUMENTS`
 
-1. Read the active CHP/1 handoff and task ledger.
-2. Reject unsupported `F`, deductions without cited facts, hidden assumptions, and vague `H` records.
-3. Open the decision-critical references and inspect every changed file.
-4. Check scope, accidental edits, public contracts, business behavior, errors, security, transactions, idempotency, concurrency, and test adequacy as applicable.
-5. Resolve each handoff. Delegate again only when the decision has made the remaining work mechanical.
-6. Run the checks required for the stated quality gates.
-7. Report gates as `SCOPED`, `IMPLEMENTED`, `COMPILED`, `TESTED`, `REVIEWED`, or `VERIFIED`; never infer a gate.
+1. Read the route packet, DCP/2 contracts, CHP/2 handoffs, and task ledger.
+2. Reject unsupported facts, deductions with missing evidence, hidden assumptions, invalid protocol records, unresolved handoffs, and false verification claims.
+3. Confirm the route and M0/L1/L2/C3 classification remain correct.
+4. Verify decision-critical references and every consequential or public-contract hunk.
+5. For low-risk mechanical hunks, use diff classification, targeted sampling, compilation, and tests rather than rereading full files.
+6. Confirm a single active owner per code region and no out-of-scope edits.
+7. Resolve every `H` and material unknown. Redelegate only after the remaining work becomes bounded M0/L1.
+8. Report `SCOPED`, `IMPLEMENTED`, `COMPILED`, `TESTED`, `REVIEWED`, and `VERIFIED` only when actually achieved.

@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "dreamteam",
   "displayName": "DreamTeam",
-  "version": "0.1.0",
-  "description": "Token-aware routing, compact handoffs, and specialized workers that reduce operational overhead while preserving orchestrator review.",
+  "version": "0.2.0",
+  "description": "Constitution-guided, token-aware routing between an orchestrator and specialized low-cost workers, with explicit code ownership and protocol validation.",
   "author": {
     "name": "RcomaShow",
     "url": "https://github.com/RcomaShow"

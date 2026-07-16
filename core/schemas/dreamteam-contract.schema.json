@@ -1,26 +1,65 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "DreamTeam Delegation Contract",
+  "title": "DreamTeam DCP/2 Contract",
   "type": "object",
+  "additionalProperties": false,
   "required": [
+    "protocol",
+    "runId",
+    "taskId",
+    "constitution",
+    "profile",
     "goal",
-    "allowed_scope",
     "tasks",
-    "reserved_decisions",
-    "budget"
+    "budget",
+    "output"
   ],
   "properties": {
+    "protocol": {
+      "const": "DCP/2"
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "constitution": {
+      "const": "DT-C1"
+    },
+    "profile": {
+      "enum": [
+        "economy",
+        "balanced",
+        "offload",
+        "quality"
+      ]
+    },
     "goal": {
       "type": "string",
       "minLength": 1
     },
-    "allowed_scope": {
+    "allowedScope": {
       "type": "array",
       "items": {
         "type": "string"
       }
     },
-    "excluded_scope": {
+    "excludedScope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "editableSymbols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reservedSymbols": {
       "type": "array",
       "items": {
         "type": "string"
@@ -32,7 +71,7 @@
         "type": "string"
       }
     },
-    "known_decisions": {
+    "knownDecisions": {
       "type": "array",
       "items": {
         "type": "string"
@@ -40,11 +79,12 @@
     },
     "tasks": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "string"
       }
     },
-    "reserved_decisions": {
+    "reservedDecisions": {
       "type": "array",
       "items": {
         "type": "string"
@@ -56,11 +96,19 @@
         "type": "string"
       }
     },
+    "output": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
     "budget": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "files",
-        "deep_reads",
+        "deepReads",
         "turns",
         "records",
         "retries"
@@ -70,7 +118,7 @@
           "type": "integer",
           "minimum": 0
         },
-        "deep_reads": {
+        "deepReads": {
           "type": "integer",
           "minimum": 0
         },
@@ -86,15 +134,7 @@
           "type": "integer",
           "minimum": 0
         }
-      },
-      "additionalProperties": false
-    },
-    "output": {
-      "type": "array",
-      "items": {
-        "type": "string"
       }
     }
-  },
-  "additionalProperties": false
+  }
 }

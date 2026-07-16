@@ -1,23 +1,7 @@
-# Worker Design
+# Worker Design 0.2
 
-Add a worker only when all are true:
+Create a worker only when at least two of these differ: tool set, risk, stop condition, output shape, model tier, verification, or decision authority.
 
-1. the task recurs;
-2. it has a distinct tool and risk boundary;
-3. a narrow contract materially improves reliability;
-4. routing can distinguish it from existing workers;
-5. its output can be verified.
+DreamTeam workers are split into discovery, execution, and verification families. Each worker has a compact constitution projection, a closed contract, a strict stop condition, and CHP/2 output. Worker descriptions must state both when to use and when not to use the role.
 
-A worker should not be created solely for a technology name. Prefer capability roles such as `structure-builder` over `java-dto-agent`.
-
-Every worker requires:
-
-- purpose;
-- trigger;
-- required inputs;
-- tools;
-- hard boundaries;
-- budget;
-- handoff schema;
-- known failure modes;
-- evaluation fixtures.
+More available workers do not imply more workers per task. The router uses the shortest sufficient chain.

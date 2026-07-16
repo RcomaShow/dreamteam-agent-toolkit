@@ -1,42 +1,21 @@
-# Routing Policy
+# Routing Policy 0.2
 
-## Direct orchestrator work
+1. Classify code as M0, L1, L2, or C3.
+2. Apply hard gates before considering delegation.
+3. Select one of MAIN_DIRECT, WORKER_READ, WORKER_WRITE, HYBRID_EDIT, or HIGH_CAPABILITY_WORKER.
+4. Use the shortest sufficient worker chain.
+5. Declare a compact route packet before work begins.
 
-Prefer direct work when:
+## Hard gates for direct orchestrator ownership
 
-- the task is one or two local files;
-- delegation startup would exceed the likely exploration;
-- the change is logically dense;
-- decisions remain ambiguous;
-- risk is high;
-- the orchestrator must inspect almost all source material anyway.
+- architecture or business semantics are undecided;
+- public contracts, security, transaction, concurrency, idempotency, distributed consistency, database migration, or destructive behavior are involved;
+- the task is localized and delegation overhead is comparable to implementation;
+- the orchestrator must inspect almost all material anyway;
+- acceptance criteria or a closed contract are missing.
 
-## Delegate to a read-only worker
+## Delegation gates
 
-Use for:
+Delegate read work when context volume is high and decision density is low. Delegate write work only when behavior, scope, editable symbols, reserved decisions, and verification are explicit.
 
-- repository exploration across several files;
-- finding definitions, callers, and analogues;
-- summarizing large but bounded context;
-- filtering verbose diagnostics;
-- collecting evidence before a decision.
-
-## Delegate to a write worker
-
-Use only when:
-
-- signatures and behavior are already decided;
-- allowed files are closed;
-- a clear pattern exists;
-- work is mechanical or repetitive;
-- the orchestrator will review the diff.
-
-## Sequence
-
-```text
-classify -> contract -> delegate -> compact handoff ->
-verify critical evidence -> decide -> optionally redelegate ->
-final diff review -> required checks
-```
-
-Do not run multiple workers on the same question. Parallelize only independent scopes with no shared files or decisions.
+Do not run overlapping workers on the same question. No worker delegates to another worker. The orchestrator owns every transition.

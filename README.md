@@ -2,126 +2,56 @@
 
 **The right agent for every task. Orchestrate smarter. Spend less.**
 
-DreamTeam is a platform-independent toolkit for cost-aware, quality-gated multi-agent work. It separates reusable orchestration concepts from platform adapters, so the same routing, compact handoff, and worker design can be implemented in Claude Code, Codex, Gemini CLI, custom agent runtimes, or future systems.
+DreamTeam is a platform-independent toolkit for constitution-guided, token-aware multi-agent engineering. It routes bounded high-volume work to specialized low-cost workers while keeping consequential decisions, code, and final ownership with the orchestrator.
 
-## What DreamTeam optimizes
+## 0.2 principles
 
-DreamTeam targets four operational costs:
+- **Haiku handles volume; the orchestrator handles consequence.**
+- Optimize total tokens, main-model tokens, and weighted cost separately.
+- Use one of five explicit routes: `MAIN_DIRECT`, `WORKER_READ`, `WORKER_WRITE`, `HYBRID_EDIT`, or `HIGH_CAPABILITY_WORKER`.
+- Classify work as `M0`, `L1`, `L2`, or `C3` before assigning edit ownership.
+- Use DCP/2 contracts and CHP/2 handoffs with parsable validation.
+- Avoid duplicated investigation and verify proportionately to risk.
+- No Agent Teams, nested agents, hooks, or telemetry are enabled by default.
 
-| Cost | Mechanism |
-|---|---|
-| Model/context cost | Route verbose or mechanical work to lower-cost workers |
-| Repeated work | Delta handoffs, task ledgers, and resumable scopes |
-| Failed attempts | Stop-loss rules, bounded retries, and explicit escalation |
-| Quality risk | Keep critical decisions with the orchestrator and require verification gates |
-
-DreamTeam does **not** assume that delegation always saves tokens. The router delegates only when the expected context avoided in the orchestrator is greater than worker startup, handoff, and verification overhead.
-
-## Architecture
-
-```text
-User request
-    |
-    v
-Orchestrator / router
-    |
-    +-- direct execution for small or high-risk work
-    |
-    +-- read-only worker for exploration or compression
-    |
-    +-- write worker for mechanical, well-specified changes
-    |
-    +-- triage worker for verbose failures
-    |
-    v
-Compact evidence-based handoff
-    |
-    v
-Orchestrator decision, review, and final verification
-```
-
-The platform-independent definitions are under `core/` and `workers/`. Platform-specific packaging lives under `adapters/`.
-
-## First working adapter: Claude Code
-
-The Claude Code adapter ships a marketplace-compatible plugin named `dreamteam` with:
-
-- `/dreamteam:run` — token-aware routing and orchestration
-- `/dreamteam:review` — review worker output and resolve handoffs
-- `/dreamteam:measure` — compare direct and delegated workflows
-- six scoped workers: repository scout, context synthesizer, structure builder, test writer, failure triage, and mechanical editor
-
-### Local test
-
-```bash
-claude --plugin-dir ./adapters/claude-code/plugins/dreamteam
-```
-
-Then run:
-
-```text
-/dreamteam:run profile=balanced <your task>
-```
-
-### Marketplace installation after publishing this repository
+## Claude Code adapter
 
 ```text
 /plugin marketplace add RcomaShow/dreamteam-agent-toolkit
 /plugin install dreamteam@dreamteam-tools
 ```
 
-## Profiles
-
-- **economy**: minimum worker turns, one retry, compact outputs
-- **balanced**: default compromise between savings and confidence
-- **quality**: broader verification and more orchestrator ownership
-
-Profiles are policies, not guarantees. High-risk decisions remain with the orchestrator in every profile.
-
-## Repository map
+Commands:
 
 ```text
-core/                       Platform-independent protocols and policies
-workers/                    Generic worker specifications and prompts
-adapters/claude-code/       Working Claude Code marketplace/plugin adapter
-adapters/codex/             Future adapter contract
-adapters/gemini-cli/        Future adapter contract
-adapters/generic-cli/       Runtime-agnostic integration example
-docs/                       Architecture, token, prompting, and extension guides
-examples/                   End-to-end task examples
-scripts/                    Validation, synchronization, and release tooling
-tests/                      Structural and protocol tests
+/dreamteam:run profile=offload <task>
+/dreamteam:review
+/dreamteam:measure
+/dreamteam:doctor
 ```
 
-## Validate and build
+Profiles:
+
+- `economy`: minimize total usage;
+- `balanced`: default weighted compromise;
+- `offload`: minimize main/high-capability-model work;
+- `quality`: expanded verification and optional isolated high-capability analysis.
+
+## Worker families
+
+- discovery: symbol location, flow tracing, pattern mining, impact mapping, context synthesis;
+- execution: scaffolding, mechanical edits, bounded logic, tests, documentation;
+- verification: failure triage, diff audit, test gaps.
+
+## Validate
 
 ```bash
+python scripts/sync_claude_adapter.py
 python scripts/validate.py
 python -m unittest discover -s tests -v
-python scripts/build_release.py
 ```
 
-If Claude Code is installed:
-
-```bash
-claude plugin validate ./adapters/claude-code/plugins/dreamteam --strict
-claude plugin validate .
-```
-
-## Design principles
-
-1. Delegate evidence gathering, not responsibility.
-2. Prefer narrow workers over a universal worker.
-3. Keep worker output smaller than the material it replaces.
-4. Separate facts, deductions, unknowns, and decisions.
-5. Use explicit scope and output budgets.
-6. Stop after bounded failed attempts.
-7. Keep critical logic, contracts, security, transactions, and final review with the orchestrator.
-8. Measure savings on representative tasks instead of assuming them.
-
-## Status
-
-`0.1.0` is an initial architecture and Claude Code adapter. The core is intentionally stable and generic; adapters may evolve independently.
+See `docs/v0.2-design.md`, `core/constitution/`, and `core/routing/` for the design.
 
 ## License
 
