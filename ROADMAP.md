@@ -1,21 +1,19 @@
 # Roadmap
 
-## 0.2 — Charter and Offload
+## 0.3 — Executable Cost-Proof Orchestration
 
-- Constitution, protocol validation, explicit code ownership, specialized Haiku workers, and main-model offload.
+- Self-contained runtime/plugin, whole-tree routing, strict config, ledger/anchors, hooks, claim-safe benchmark, artifact smoke test.
 
-## 0.3 — Evaluation
+## 0.4 — Evaluation and Calibration
 
-- Real-task benchmark harness.
-- Per-worker behavioral fixtures.
-- Routing accuracy, compression, reread, and quality-parity reports.
-- Optional deterministic log filtering and scope guards, disabled by default.
+- Representative Java, Python, TypeScript, infrastructure, migration, and test-generation suites.
+- Cold/warm cache cohorts, randomized order, bucket-specific escalation calibration, and optional closed-context Batch executor.
+- Deterministic repository capsule and stronger observation filtering.
 
-## 0.4 — Additional adapters
+## 0.5 — Additional Adapters
 
-- Codex and Gemini CLI prototypes.
-- Cross-adapter conformance tests.
+- Codex and Gemini CLI prototypes, portable usage/event schema, and conformance tests.
 
 ## 1.0
 
-- Stable core protocols and published benchmark methodology.
+- Stable protocols, published representative benchmark results, security review, and signed release artifacts.

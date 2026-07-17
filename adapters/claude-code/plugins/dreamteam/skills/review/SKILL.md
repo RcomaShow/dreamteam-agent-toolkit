@@ -1,19 +1,21 @@
 ---
 name: review
-description: Review DreamTeam 0.2 routes, CHP/2 handoffs, symbol ownership, worker edits, and final quality gates without reproducing delegated investigations.
+description: Review DreamTeam 0.3 route economics, anchors, ledger compliance, independent verification, and final quality gates without reproducing delegated investigations.
 argument-hint: "[optional scope]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Review 0.2
+# DreamTeam Review 0.3
 
 Scope: `$ARGUMENTS`
 
-1. Read the route packet, DCP/2 contracts, CHP/2 handoffs, and task ledger.
-2. Reject unsupported facts, deductions with missing evidence, hidden assumptions, invalid protocol records, unresolved handoffs, and false verification claims.
-3. Confirm the route and M0/L1/L2/C3 classification remain correct.
-4. Verify decision-critical references and every consequential or public-contract hunk.
-5. For low-risk mechanical hunks, use diff classification, targeted sampling, compilation, and tests rather than rereading full files.
-6. Confirm a single active owner per code region and no out-of-scope edits.
-7. Resolve every `H` and material unknown. Redelegate only after the remaining work becomes bounded M0/L1.
-8. Report `SCOPED`, `IMPLEMENTED`, `COMPILED`, `TESTED`, `REVIEWED`, and `VERIFIED` only when actually achieved.
+1. Read the selected route, rejected candidate, pricing catalog, DCP/2 contracts, CHP/2 handoffs, anchors, checkpoints, and ledger summary.
+2. Confirm the direct baseline is Sonnet 5-only and the candidate includes every active tier, cache operation, retry, verifier, and escalation.
+3. Reject Batch discounts unless config opt-in, executor capability, closed context, and retention confirmation are all present.
+4. Verify every decision-critical anchor against the current blob and slice before relying on it.
+5. Confirm the writer is not its own acceptance oracle and that C3/public-contract regions remain executive-owned.
+6. Check reread ratio, strict-mode invalidations, budget reservation, release, and reconciliation.
+7. Reject unsupported facts, hidden assumptions, invalid protocol records, unresolved handoffs, stale anchors, and false verification claims.
+8. Inspect consequential hunks directly; sample mechanical hunks and use targeted checks rather than repeating full discovery.
+9. For benchmark claims, require strict input types, paired quality parity, positive median savings, configured margin, sample minimum, and positive lower-tail result.
+10. Report `SCOPED`, `IMPLEMENTED`, `COMPILED`, `TESTED`, `REVIEWED`, and `VERIFIED` only when actually achieved.

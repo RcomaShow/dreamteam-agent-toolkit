@@ -1,31 +1,37 @@
 {
-  "version": 1,
+  "version": 2,
   "constitution": "DT-C1",
-  "profile": "offload",
+  "topology": "lean",
+  "profile": "balanced",
+  "pricingAsOf": "2026-07-17",
   "models": {
-    "orchestrator": "inherit",
+    "executive": "inherit",
+    "lead": "sonnet",
     "workers": "haiku"
   },
   "routing": {
-    "directMaxLocalFiles": 2,
-    "targetCompressionRatio": 4.0,
+    "minimumSavingsMargin": 0.30,
+    "maxEscalationProbability": 0.25,
     "maxMainRereadRatio": 0.35,
-    "maxActiveWorkers": 1,
+    "minSamplesForEnforcement": 20,
+    "allowClosedContextBatch": false,
     "allowParallelIndependent": false
   },
   "budgets": {
-    "maxWorkerTurns": 10,
-    "maxDeepReads": 12,
-    "maxHandoffRecords": 28,
-    "maxRetries": 1
+    "maxRunUsd": 1.0,
+    "maxActiveWorkers": 1,
+    "maxRetries": 1,
+    "maxWorkerTurns": 10
   },
   "verification": {
-    "reviewEveryDiff": true,
-    "requireTargetedTest": true,
+    "requireIndependentWriterReview": true,
+    "requireAnchorValidation": true,
     "allowFullSuite": "orchestrator-only"
   },
   "telemetry": {
     "enabled": false,
-    "storeSourceContent": false
+    "storeSourceContent": false,
+    "ledger": "off",
+    "enforcement": "advisory"
   }
 }

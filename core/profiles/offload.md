@@ -1,25 +1,15 @@
-# Offload Profile
+# Offload Profile 0.3
 
-Primary target: reduce high-capability/main-model work while preserving verified quality.
+Primary target: reduce executive tokens without violating the whole-tree USD gate.
 
 ```text
-optimization_target=main_model_tokens
-max_active_workers=1
-max_worker_chain=3
-max_worker_turns=10
-max_deep_reads=12
-max_output_records=28
+minimum_savings_margin=0.20
+max_active_workers=2
 max_retries=1
-parallelism=off
-nested_agents=off
-prefer_worker_for_search=true
-prefer_worker_for_logs=true
-prefer_worker_for_scaffolding=true
-prefer_worker_for_bounded_logic=true
-prefer_worker_for_tests=true
-prefer_worker_for_diff_classification=true
-orchestrator_max_critical_references=4
-orchestrator_avoid_duplicate_reads=true
+max_worker_turns=10
+allow_parallel_independent=true
+allow_closed_context_batch=false
+verification=independent_for_writes
 ```
 
-C3 code remains orchestrator-owned in every profile.
+Offload broad discovery, logs, scaffolding, bounded logic, tests, and diff classification only when scopes are independent and budget reservations fit. C3 remains executive-owned.

@@ -2,6 +2,7 @@
 name: execution-documentation-updater
 description: Update bounded technical documentation from approved code changes, decisions, and verification results. No new product or architecture decisions.
 model: haiku
+effort: low
 tools: Read, Grep, Glob, Edit, Write
 maxTurns: 6
 background: false

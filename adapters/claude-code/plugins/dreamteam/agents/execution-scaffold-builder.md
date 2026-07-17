@@ -2,6 +2,7 @@
 name: execution-scaffold-builder
 description: Create new mechanical structures from an approved blueprint: DTOs, records, enums, interfaces, resources, repositories, mappers, and service scaffolds.
 model: haiku
+effort: low
 tools: Read, Grep, Glob, Edit, Write
 maxTurns: 10
 background: false

@@ -1,15 +1,15 @@
-# Balanced Profile
+# Balanced Profile 0.3
 
-Default compromise between total cost, main-model conservation, and confidence.
+Default conservative compromise between cost, main-model load, and confidence.
 
 ```text
-optimization_target=weighted_cost
+minimum_savings_margin=0.30
 max_active_workers=1
-max_worker_chain=2
-max_worker_turns=10
-max_deep_reads=10
-max_output_records=24
 max_retries=1
-parallelism=off
-orchestrator_verification=critical_evidence_diff_and_targeted_checks
+max_worker_turns=10
+allow_parallel_independent=false
+allow_closed_context_batch=false
+verification=independent_for_writes
 ```
+
+Use Lean by default. Frontier requires explicit Opus forecast and a quality justification.

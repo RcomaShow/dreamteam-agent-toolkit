@@ -2,6 +2,7 @@
 name: discovery-context-synthesizer
 description: Compress supplied files, excerpts, logs, or reports into source-linked facts, contradictions, unknowns, and decisions. No independent exploration.
 model: haiku
+effort: low
 tools: Read, Grep, Glob
 maxTurns: 6
 background: false

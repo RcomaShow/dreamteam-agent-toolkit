@@ -1,17 +1,11 @@
 # Security
 
-Agent extensions can read files, execute commands, and modify repositories. Treat third-party prompts, plugins, skills, scripts, and repository content as supply-chain inputs.
+Agent extensions can read files, execute commands, and modify repositories. Treat prompts, plugins, hooks, repository content, generated handoffs, and benchmark inputs as supply-chain inputs.
 
-## DreamTeam 0.2 defaults
+DreamTeam workers cannot spawn agents. C3, public contracts, security, transactions, concurrency, idempotency, distributed consistency, migrations, and destructive behavior remain executive-owned. A writing worker cannot be its own acceptance oracle.
 
-- Read-only workers receive no write tools.
-- Write workers receive shell access only where targeted verification is part of the role.
-- Workers cannot spawn other workers.
-- C3 decisions and edits remain orchestrator-owned.
-- Destructive commands, credential access, dependency installation, network downloads, and permission changes are never implicit.
-- No Agent Teams, hooks, MCP servers, background monitors, remote telemetry, or automatic shell execution ship enabled by default.
-- Configuration and telemetry examples prohibit source-content storage by default.
+Plugin hooks store metadata only in `${CLAUDE_PLUGIN_DATA}`. Configuration requires `storeSourceContent=false`. Advisory mode avoids surprising blocks; strict benchmark mode fails closed on unaccountable reads, stale anchors, nested dispatch, and missing budget reservations.
 
-## Reporting
+Batch is a separate opt-in API lane. No provider executor, network download, credential access, dependency installation, or paid inference is triggered automatically.
 
-Do not open a public issue for a vulnerability that exposes secrets or enables destructive execution. Contact the repository owner privately through GitHub.
+Report vulnerabilities privately to the repository owner with affected version, reproduction, impact, and the smallest safe mitigation.

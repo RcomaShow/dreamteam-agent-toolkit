@@ -1,46 +1,50 @@
-# Routing Policy 0.2
+# DreamTeam 0.3 Topologies
 
-1. Classify code as M0, L1, L2, or C3.
-2. Apply hard gates before considering delegation.
-3. Select one of MAIN_DIRECT, WORKER_READ, WORKER_WRITE, HYBRID_EDIT, or HIGH_CAPABILITY_WORKER.
-4. Use the shortest sufficient worker chain.
-5. Declare a compact route packet before work begins.
+The hierarchy is logical; physical dispatch is flat and owned by the root session. Hooks deny Agent dispatch from inside workers.
 
-## Hard gates for direct orchestrator ownership
+## Lean — Sonnet 5 → Haiku 4.5
 
-- architecture or business semantics are undecided;
-- public contracts, security, transaction, concurrency, idempotency, distributed consistency, database migration, or destructive behavior are involved;
-- the task is localized and delegation overhead is comparable to implementation;
-- the orchestrator must inspect almost all material anyway;
-- acceptance criteria or a closed contract are missing.
+Sonnet owns requirements, L2/C3 decisions, integration, independent writer review, and final acceptance. Haiku handles bounded discovery, M0 edits, completely specified L1 logic, tests, documentation, failure triage, and diff classification.
 
-## Delegation gates
+## Frontier — Opus 4.8 → Sonnet 5 → Haiku 4.5
 
-Delegate read work when context volume is high and decision density is low. Delegate write work only when behavior, scope, editable symbols, reserved decisions, and verification are explicit.
+Opus owns cross-domain C3 decisions and final acceptance. Sonnet acts as bounded lead and independent reviewer. Haiku handles bounded volume. Frontier requires explicit Opus token forecast and is a quality route until paired benchmarks prove economic value for a task bucket.
 
-Do not run overlapping workers on the same question. No worker delegates to another worker. The orchestrator owns every transition.
+## Routes
 
-# Execution Routes
+- `MAIN_DIRECT`: localized, hot-context, ambiguous, uncalibrated, over-budget, or consequential work.
+- `HAIKU_DISCOVERY`: bounded evidence gathering.
+- `HAIKU_EXECUTE`: M0/L1 writing with a distinct Sonnet acceptance oracle.
+- `SONNET_LEAD`: L2 integration or independent review.
+- `OPUS_DECISION`: Frontier C3 or cross-domain decision.
 
-## MAIN_DIRECT
+# Cost-Proof Routing 0.3
 
-The orchestrator reads, decides, edits, and verifies. Use for localized but logically dense work, ambiguous semantics, high-risk changes, or when the delegation contract would be comparable to the implementation.
+Delegation is an economic hypothesis. The direct baseline is always Sonnet 5-only with an explicit pricing snapshot and explicit cache usage; topology never changes the baseline.
 
-## WORKER_READ
+## Whole-tree candidate
 
-A lower-cost read-only worker gathers evidence; the orchestrator decides and edits. Use for repository discovery, legacy tracing, impact analysis, pattern search, context compression, and failure diagnosis.
+Account separately for Haiku worker, Sonnet lead, Sonnet independent verifier, Frontier Opus executive, cache reads/writes, Batch lane, expected retries, and expected escalation to the direct fallback.
 
-## WORKER_WRITE
+Frontier is not a free quality tier: every candidate requires a non-zero Opus executive forecast. Missing executive usage fails closed to direct.
 
-A lower-cost worker edits fully specified M0 or L1 work; the orchestrator reviews proportionately to risk and runs final gates.
+## Conservative gate
 
-## HYBRID_EDIT
+Delegate only when the candidate:
 
-Workers handle discovery and mechanical/bounded implementation. The orchestrator owns L2/C3 regions and final review. This is the preferred path for mixed migration work.
+1. is permitted by criticality and independent verification;
+2. stays below escalation, reread, run-budget, and calibration limits;
+3. clears `minimumSavingsMargin` against the pinned direct baseline.
 
-## HIGH_CAPABILITY_WORKER
+When rejected, preserve both the selected direct cost and the rejected candidate cost for audit.
 
-A separate high-capability worker isolates a difficult analysis or review. This route optimizes context isolation or quality, not model cost. It is disabled by default in `economy` and `offload`.
+## Batch
+
+Batch is eligible only when the context is closed, retention is confirmed, project config opts in, and an actual Batch executor is available. Interactive Claude Code subagents are never priced as Batch.
+
+## Calibration and claims
+
+Enforcement is bucket-specific by role, archetype, criticality, size, effort, cache mode, and adapter version. No savings claim is valid without paired quality parity, positive median savings, representative samples, and a positive lower-tail result.
 
 # Code Criticality Classes
 
@@ -62,71 +66,19 @@ Public contracts, security, transaction boundaries, concurrency, idempotency, Ka
 
 File count never overrides criticality.
 
-# Offload Policy
+# Escalation Policy
 
-Optimization target: high-capability/main-model context and work.
+Escalation means returning decision ownership, not silently choosing a stronger model.
 
-Offload by default when a bounded worker can reliably perform:
+Escalate when:
 
-- bulk repository search or symbol location;
-- call-flow tracing and impact mapping;
-- pattern comparison;
-- context or log compression;
-- scaffolding and repetitive edits;
-- fully specified bounded logic;
-- approved test implementation;
-- failure triage, diff classification, and test-gap analysis.
+- a reserved decision is required;
+- evidence conflicts;
+- scope must expand;
+- a public contract may change;
+- security, transaction, concurrency, idempotency, or distributed consistency is involved;
+- two bounded attempts fail on the same cause;
+- required information is unavailable;
+- verification contradicts the assumed behavior.
 
-The orchestrator retains:
-
-- requirement interpretation and ambiguity resolution;
-- architecture and business semantics;
-- C3 code changes;
-- public contracts and consequential error behavior;
-- final ownership and quality gates.
-
-## No duplicate work
-
-The orchestrator verifies only decision-critical references, contradictions, consequential code, and required gates. It does not reproduce a worker investigation in full.
-
-## Shortest sufficient chain
-
-Use the minimum worker sequence. Return to the orchestrator whenever a decision is reached. Resume a compatible worker context instead of restarting when the runtime supports it.
-
-# Token-Aware Routing 0.2
-
-Optimize separately:
-
-```text
-total_tokens
-main_model_tokens
-weighted_cost
-```
-
-The `offload` profile prioritizes `main_model_tokens`. This may accept modest worker overhead when it prevents the high-capability model from bulk reading, raw-log processing, repetitive implementation, or routine verification.
-
-## Expected delegation value
-
-Delegate only when avoided main-model work is meaningfully larger than:
-
-```text
-worker instructions + context reconstruction + handoff + main verification
-```
-
-Track:
-
-- compression ratio: material processed by worker / handoff size;
-- main reread ratio: worker-read material reread by main / worker-read material;
-- duplicate deep reads;
-- worker and main turns;
-- total and main-model usage;
-- quality parity and retries.
-
-Initial targets for delegable discovery tasks:
-
-```text
-compression_ratio >= 4.0
-main_reread_ratio <= 0.35
-```
-
-These are evaluation targets, not runtime guarantees.
+An escalation record includes location, evidence, decision required, blocked work, and recommended next owner.

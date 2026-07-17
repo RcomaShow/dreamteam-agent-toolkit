@@ -3,12 +3,12 @@
   "owner": {
     "name": "RcomaShow"
   },
-  "description": "DreamTeam adapters for constitution-guided, token-aware orchestration and main-model offload.",
+  "description": "DreamTeam adapters for cost-proof Lean and Frontier orchestration with bounded workers and independent verification.",
   "plugins": [
     {
       "name": "dreamteam",
       "source": "./adapters/claude-code/plugins/dreamteam",
-      "description": "Explicit routing, compact protocols, and specialized low-cost workers for Claude Code."
+      "description": "Tiered Claude Code orchestration with conservative USD routing, compact evidence, and quality-parity measurement."
     }
   ]
 }

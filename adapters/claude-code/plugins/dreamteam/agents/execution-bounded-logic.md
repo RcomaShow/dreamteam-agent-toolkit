@@ -2,6 +2,7 @@
 name: execution-bounded-logic
 description: Implement completely specified local L1 logic with enumerated branches, explicit inputs/outputs, closed symbols, and targeted tests.
 model: haiku
+effort: medium
 tools: Read, Grep, Glob, Edit, Write, Bash
 maxTurns: 10
 background: false

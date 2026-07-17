@@ -1,34 +1,32 @@
 ---
 name: run
-description: Route an engineering task across the current orchestrator and bounded low-cost DreamTeam workers, optimizing total cost or main-model offload while preserving explicit ownership and quality gates.
-argument-hint: "profile=<economy|balanced|offload|quality> <task>"
+description: Route an engineering task through DreamTeam 0.3 Lean or Frontier topology using the bundled conservative runtime and explicit quality ownership.
+argument-hint: "topology=<lean|frontier> profile=<economy|balanced|offload|quality> <task>"
 disable-model-invocation: true
 ---
 
-# DreamTeam Run 0.2
+# DreamTeam Run 0.3
 
 Task: `$ARGUMENTS`
 
-You are the orchestrator and final owner.
+You are the executive orchestrator and final owner.
 
-1. Read `${CLAUDE_SKILL_DIR}/references/constitution-kernel.md`.
-2. Load `dreamteam.config.json` only when present; otherwise parse the profile, defaulting to `balanced`.
-3. Classify the requested code/work as `M0`, `L1`, `L2`, or `C3`.
-4. Apply hard gates, then choose exactly one route: `MAIN_DIRECT`, `WORKER_READ`, `WORKER_WRITE`, `HYBRID_EDIT`, or `HIGH_CAPABILITY_WORKER`.
-5. Emit a compact route packet before delegation or editing.
-6. Use the shortest sufficient worker chain. One worker at a time; workers never delegate.
-7. Before each worker, issue DCP/2 with closed paths and symbol ownership. Reserve C3 and unresolved L2 decisions to the orchestrator.
-8. Treat worker facts as claims. Verify decision-critical references, contradictions, consequential code, and required gates—never repeat the entire investigation.
-9. Sonnet/main edits directly for C3 work, localized dense logic, or when delegation would require transferring most reasoning.
-10. Haiku workers may edit M0 and fully specified L1 work. For L2, use hybrid ownership.
-11. Resolve every handoff and unknown. Reuse/resume a compatible worker when supported instead of restarting.
-12. Run final checks and report only gates actually achieved.
+1. Read `${CLAUDE_SKILL_DIR}/references/constitution-kernel.md` and load project `dreamteam.config.json`.
+2. Classify the work as M0, L1, L2, or C3 and select a typed task kind.
+3. Build the smallest deterministic repository capsule before broad model reads.
+4. Produce explicit token forecasts for direct Sonnet, Haiku worker, Sonnet lead/verifier, and Frontier Opus executive.
+5. Call the bundled router from `${CLAUDE_PLUGIN_ROOT}/scripts/dreamteam_route.py`; do not estimate the final gate only in prose.
+6. Delegate only when the candidate clears config, calibration, reread, budget, escalation, verification, and USD gates.
+7. Batch is a separate API lane and requires config opt-in, a real Batch executor, closed context, and retention confirmation.
+8. Keep physical dispatch flat. Workers never spawn workers; the executive owns the DAG and every transition.
+9. A writing worker may not be its own acceptance oracle. C3 and public-contract decisions remain executive-owned.
+10. Checkpoint completed nodes, reuse compatible context, verify anchors, and compact only at phase boundaries.
+11. Treat hook strict-mode invalidations as benchmark failures, not ignorable warnings.
+12. Report actual gates, pricing catalog, selected and rejected costs, and measured results. Never claim savings without quality-parity evidence.
 
-Load references only when needed:
-
-- routes/criticality/offload: `${CLAUDE_SKILL_DIR}/references/routing-policy.md`
-- worker selection: `${CLAUDE_SKILL_DIR}/references/worker-catalog.md`
-- protocol syntax: `${CLAUDE_SKILL_DIR}/references/compact-protocol.md`
-- budgets: `${CLAUDE_SKILL_DIR}/references/profiles.md`
-- verification: `${CLAUDE_SKILL_DIR}/references/quality-gates.md`
-- ready templates: `${CLAUDE_SKILL_DIR}/references/templates.md`
+Load references only as needed:
+- routing/topology: `${CLAUDE_SKILL_DIR}/references/routing-policy.md`
+- workers: `${CLAUDE_SKILL_DIR}/references/worker-catalog.md`
+- protocol: `${CLAUDE_SKILL_DIR}/references/compact-protocol.md`
+- profiles: `${CLAUDE_SKILL_DIR}/references/profiles.md`
+- quality: `${CLAUDE_SKILL_DIR}/references/quality-gates.md`

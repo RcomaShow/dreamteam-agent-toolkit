@@ -1,23 +1,34 @@
 import unittest
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[1]
-PLUGIN=ROOT/'adapters/claude-code/plugins/dreamteam'
+ROOT = Path(__file__).resolve().parents[1]
+PLUGIN = ROOT / "adapters/claude-code/plugins/dreamteam"
+
 
 class WorkerCatalogTests(unittest.TestCase):
-    def test_worker_families_and_model(self):
-        files=list((PLUGIN/'agents').glob('*.md'))
-        self.assertGreaterEqual(len(files),10)
-        families={p.stem.split('-',1)[0] for p in files}
-        self.assertEqual(families,{'discovery','execution','verification'})
-        for p in files:
-            text=p.read_text()
-            self.assertIn('model: haiku',text)
-            self.assertIn('CHP/2',text)
-            self.assertNotIn('Agent,',text)
-    def test_offload_profile(self):
-        text=(ROOT/'core/profiles/offload.md').read_text()
-        self.assertIn('main_model_tokens',text)
-        self.assertIn('parallelism=off',text)
+    def test_worker_families_models_and_effort(self):
+        files = list((PLUGIN / "agents").glob("*.md"))
+        self.assertEqual(len(files), 15)
+        families = {path.stem.split("-", 1)[0] for path in files}
+        self.assertEqual(families, {"coordination", "discovery", "execution", "verification"})
+        haiku = sonnet = 0
+        for path in files:
+            text = path.read_text()
+            self.assertIn("effort:", text)
+            self.assertIn("CHP/2", text)
+            self.assertNotIn("Agent,", text)
+            if "model: haiku" in text:
+                haiku += 1
+            if "model: sonnet" in text:
+                sonnet += 1
+        self.assertEqual((haiku, sonnet), (13, 2))
 
-if __name__=='__main__': unittest.main()
+    def test_frontier_roles_are_bounded(self):
+        analyst = (PLUGIN / "agents/coordination-decision-analyst.md").read_text()
+        reviewer = (PLUGIN / "agents/verification-independent-reviewer.md").read_text()
+        self.assertIn("Do not perform broad repository discovery", analyst)
+        self.assertIn("Reject self-review", reviewer)
+
+
+if __name__ == "__main__":
+    unittest.main()

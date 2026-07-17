@@ -1,45 +1,16 @@
-# Publishing
+# Publishing DreamTeam 0.3
 
-## Pre-release checks
-
-Run the platform-independent validation suite:
+Run from the repository root:
 
 ```bash
 python scripts/sync_claude_adapter.py
+git diff --exit-code
 python scripts/validate.py
 python -m unittest discover -s tests -v
-```
-
-Validate representative DCP/2 and CHP/2 files with:
-
-```bash
-python scripts/protocol_v2.py path/to/contract.dcp2 --hash
-python scripts/protocol_v2.py path/to/handoff.chp2
-```
-
-When Claude Code is installed, also validate the adapter and marketplace:
-
-```bash
-claude plugin validate ./adapters/claude-code/plugins/dreamteam --strict
-claude plugin validate .
-```
-
-## Release process
-
-1. Update the plugin version and `CHANGELOG.md`.
-2. Synchronize the Claude Code adapter from the core worker definitions.
-3. Run all validation commands.
-4. Build release archives:
-
-```bash
+python scripts/measure_v03.py
+python -m compileall dreamteam adapters/claude-code/plugins/dreamteam
 python scripts/build_release.py
+python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.3.0.zip
 ```
 
-5. Commit on a release branch, review the generated worker catalog and protocol changes, merge, tag the release, and publish the archives from `dist/`.
-
-## Marketplace
-
-```text
-/plugin marketplace add RcomaShow/dreamteam-agent-toolkit
-/plugin install dreamteam@dreamteam-tools
-```
+The release branch must contain no bootstrap/remediation payload. Publish one reviewable commit. Do not claim empirical savings unless paired benchmark artifacts satisfy the publication gate.

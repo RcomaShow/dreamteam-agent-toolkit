@@ -2,6 +2,7 @@
 name: discovery-impact-mapper
 description: Map callers, public contracts, tests, persistence, configuration, and integration surfaces affected by a proposed change.
 model: haiku
+effort: medium
 tools: Read, Grep, Glob
 maxTurns: 8
 background: false
