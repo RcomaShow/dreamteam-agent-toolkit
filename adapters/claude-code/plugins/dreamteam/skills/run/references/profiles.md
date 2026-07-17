@@ -1,4 +1,4 @@
-# Economy Profile 0.3
+# Economy Profile 0.4
 
 Primary target: minimize total API-equivalent USD and startup overhead.
 
@@ -12,9 +12,9 @@ allow_closed_context_batch=false
 verification=independent_for_writes
 ```
 
-Prefer `MAIN_DIRECT` for small, hot-context, or weakly calibrated tasks. Delegation must clear the USD gate; compression ratio alone is insufficient.
+These values are runtime defaults, not documentation-only suggestions. Prefer `MAIN_DIRECT` for small, hot-context, or weakly calibrated work.
 
-# Balanced Profile 0.3
+# Balanced Profile 0.4
 
 Default conservative compromise between cost, main-model load, and confidence.
 
@@ -28,9 +28,9 @@ allow_closed_context_batch=false
 verification=independent_for_writes
 ```
 
-Use Lean by default. Frontier requires explicit Opus forecast and a quality justification.
+Use Lean by default. Use Opus-Sonnet when the Opus executive can transfer a bounded L1/L2 implementation to Sonnet without most of its reasoning context. Frontier requires explicit Opus, Sonnet, and Haiku accounting.
 
-# Offload Profile 0.3
+# Offload Profile 0.4
 
 Primary target: reduce executive tokens without violating the whole-tree USD gate.
 
@@ -44,9 +44,9 @@ allow_closed_context_batch=false
 verification=independent_for_writes
 ```
 
-Offload broad discovery, logs, scaffolding, bounded logic, tests, and diff classification only when scopes are independent and budget reservations fit. C3 remains executive-owned.
+Offload broad discovery, logs, scaffolding, bounded logic, tests, diff classification, and bounded Opus-to-Sonnet implementation only when scopes are independent and budget reservations fit. C3 remains executive-owned.
 
-# Quality Profile 0.3
+# Quality Profile 0.4
 
 Primary target: risk reduction and decision quality. It is not automatically a savings route.
 
@@ -58,7 +58,8 @@ max_worker_turns=14
 allow_parallel_independent=true
 allow_closed_context_batch=false
 verification=expanded_independent
+opus_sonnet=allowed_when_explicitly_justified
 frontier=allowed_when_explicitly_justified
 ```
 
-Report quality value and economic result separately. Frontier must include Opus in the whole-tree forecast and cannot support a savings claim unless paired benchmarks prove it.
+Report quality value and economic result separately. Opus-Sonnet and Frontier include every active tier and cannot support a savings claim without paired benchmark evidence.

@@ -3,37 +3,64 @@
     "id": "localized-critical",
     "task": "change Kafka idempotency in one method",
     "class": "C3",
-    "route": "MAIN_DIRECT"
+    "topology": "lean",
+    "route": "MAIN_DIRECT",
+    "role": null
   },
   {
     "id": "legacy-trace",
     "task": "trace a legacy export across twelve files",
     "class": "L2",
-    "route": "WORKER_READ"
+    "topology": "lean",
+    "route": "SONNET_LEAD",
+    "role": "coordination-decision-analyst"
+  },
+  {
+    "id": "repository-discovery",
+    "task": "locate symbols and references for a bounded concept",
+    "class": "M0",
+    "topology": "lean",
+    "route": "HAIKU_DISCOVERY",
+    "role": "discovery-symbol-locator"
   },
   {
     "id": "dto-scaffold",
     "task": "create five DTOs from approved signatures",
     "class": "M0",
-    "route": "WORKER_WRITE"
+    "topology": "lean",
+    "route": "HAIKU_EXECUTE",
+    "role": "execution-scaffold-builder"
   },
   {
     "id": "bounded-mapping",
     "task": "implement an enumerated status mapping and tests",
     "class": "L1",
-    "route": "WORKER_WRITE"
+    "topology": "lean",
+    "route": "HAIKU_EXECUTE",
+    "role": "execution-bounded-logic"
   },
   {
-    "id": "mixed-migration",
-    "task": "scaffold output service while main decides transaction and duplicate semantics",
+    "id": "opus-sonnet-integration",
+    "task": "have Opus reserve the architecture decision while Sonnet implements the bounded L2 integration",
     "class": "L2",
-    "route": "HYBRID_EDIT"
+    "topology": "opus-sonnet",
+    "route": "SONNET_LEAD",
+    "role": "execution-sonnet-lead"
   },
   {
-    "id": "security-review",
-    "task": "independent security analysis with isolated context",
+    "id": "frontier-security-decision",
+    "task": "make a cross-domain security decision and delegate bounded evidence work",
     "class": "C3",
-    "route": "HIGH_CAPABILITY_WORKER",
-    "profile": "quality"
+    "topology": "frontier",
+    "route": "OPUS_DECISION",
+    "role": null
+  },
+  {
+    "id": "over-budget",
+    "task": "execute a route whose direct baseline exceeds the hard run cap",
+    "class": "L1",
+    "topology": "lean",
+    "route": "BLOCKED",
+    "role": null
   }
 ]

@@ -1,16 +1,18 @@
-"""DreamTeam 0.3 cost-proof orchestration primitives."""
-from .config import RuntimeCapabilities, RuntimeConfig, Topology
-from .pricing import ExecutionLane, PriceBook, TokenUsage, estimate_cost
+"""DreamTeam 0.4 hardened cost-proof orchestration primitives."""
+from .config import Profile, RuntimeCapabilities, RuntimeConfig, Topology
+from .pricing import ExecutionLane, PriceBook, TokenUsage, estimate_cost, resolve_model
 from .routing import Criticality, Route, RouteDecision, RouteRequest, TaskKind, choose_route
 
 __all__ = [
     "RuntimeCapabilities",
     "RuntimeConfig",
     "Topology",
+    "Profile",
     "ExecutionLane",
     "PriceBook",
     "TokenUsage",
     "estimate_cost",
+    "resolve_model",
     "Criticality",
     "TaskKind",
     "Route",
@@ -18,4 +20,4 @@ __all__ = [
     "RouteRequest",
     "choose_route",
 ]
-__version__ = "0.3.0"
+__version__ = "0.4.0"

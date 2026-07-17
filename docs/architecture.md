@@ -1,15 +1,15 @@
-# Architecture 0.2
+# Architecture 0.4
 
-DreamTeam uses a hub-and-spoke model with one final orchestrator. Workers never call each other.
+DreamTeam uses a flat physical hub-and-spoke model with one final executive. Workers never call one another, while route decisions may describe logical Lean, Opus-Sonnet, or Frontier chains.
 
 ## Stable layers
 
-- constitution: common authority, evidence, scope, and ownership principles;
-- routing: code criticality and execution routes;
-- protocols: closed delegation and compact handoff;
-- worker charters: narrow roles and tool boundaries;
-- adapters: runtime-specific model, tools, files, and invocation syntax.
+- constitution: authority, evidence, scope, ownership, and claim rules;
+- runtime: strict configuration, pricing, routing, protocol, anchor, ledger, and benchmark primitives;
+- worker catalog: bounded discovery, execution, coordination, and verification roles;
+- Claude Code adapter: generated agents/references plus route, protocol, measurement, anchor, and hook entry points;
+- release pipeline: generated-drift validation, tests, tracked-file archives, manifests, checksums, and isolated smoke tests.
 
-## Ownership
+## Ownership and state
 
-Every task declares read owner, edit owner, and review owner. Every code region has one active edit owner. M0/L1 are worker-eligible; L2 uses hybrid ownership; C3 remains orchestrator-owned.
+Every delegated task has one immutable DCP/2 binding. A successful handoff claims one author identity, and independent review claims a distinct reviewer identity. SQLite stores metadata-only reads, staged blob checks, checkpoints, reservations, durable charges, permits, tool events, config hashes, invalidations, and contract bindings. The root session owns every dispatch, transition, C3 decision, and final acceptance.

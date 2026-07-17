@@ -1,25 +1,29 @@
 ---
 name: doctor
-description: Inspect DreamTeam 0.3 runtime packaging, config, pricing snapshot, hooks, agents, budget gates, telemetry, and validation readiness.
+description: Inspect DreamTeam 0.4 runtime packaging, strict config invariants, topologies, hooks, agents, ledger charges, protocols, and validation readiness.
 argument-hint: "[optional project path]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Doctor 0.3
+# DreamTeam Doctor 0.4
 
 Inspect without changing configuration:
 
 ```text
-PLUGIN_VERSION|0.3.0
+PLUGIN_VERSION|0.4.0
 RUNTIME_IMPORT|PASS|FAIL
 CONFIG_VERSION|2
+CONFIG_HASH|
 PRICING_AS_OF|
 PRICING_CATALOG_ID|
-TOPOLOGY|lean|frontier
-AGENT_COUNTS|haiku=13;sonnet=2
+TOPOLOGY|lean|opus-sonnet|frontier
+AGENT_COUNTS|haiku=13;sonnet=3
 HOOKS|available|disabled-by-policy
 LEDGER|off|sqlite
 ENFORCEMENT|advisory|strict
+RESERVATIONS|
+CHARGED_USD_MICROS|
+PROTOCOL_VALIDATOR|PASS|FAIL
 BATCH_GATE|config;capability;closed_context;retention
 MINIMUM_SAVINGS_MARGIN|
 MAX_RUN_USD|
@@ -30,4 +34,4 @@ ARTIFACT_SMOKE_STATUS|
 WARNINGS|
 ```
 
-Check for unsupported config, missing pricing snapshot, stale anchors, self-review, unreserved Agent dispatch, broad worker overlap, source-content persistence, missing plugin runtime, and model overrides. Do not expose secrets.
+Strict mode is invalid unless telemetry is enabled, SQLite is active, hooks are available, the project-root config hash is stable, and all Agent dispatches use tool IDs and reservations. Check for outside-root paths, protected-config writes, self-review, hidden model stages, stale anchors, malformed handoffs, source-content persistence, symlinks, untracked release files, and unsupported model aliases.

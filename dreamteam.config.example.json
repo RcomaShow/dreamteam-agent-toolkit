@@ -10,18 +10,13 @@
     "workers": "haiku"
   },
   "routing": {
-    "minimumSavingsMargin": 0.30,
     "maxEscalationProbability": 0.25,
     "maxMainRereadRatio": 0.35,
     "minSamplesForEnforcement": 20,
-    "allowClosedContextBatch": false,
-    "allowParallelIndependent": false
+    "allowClosedContextBatch": false
   },
   "budgets": {
-    "maxRunUsd": 1.0,
-    "maxActiveWorkers": 1,
-    "maxRetries": 1,
-    "maxWorkerTurns": 10
+    "maxRunUsd": 1.0
   },
   "verification": {
     "requireIndependentWriterReview": true,

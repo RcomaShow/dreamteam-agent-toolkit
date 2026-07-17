@@ -1,7 +1,7 @@
-# Token and Work Optimization 0.2
+# Token and Work Optimization 0.4
 
-DreamTeam measures total tokens, main-model tokens, and weighted cost separately. The `offload` profile prioritizes main-model conservation.
+DreamTeam measures total, executive, worker, cache, reread, and cost dimensions separately. Profiles now alter executable margins, retries, turns, parallelism, and active-worker caps rather than serving as documentation-only hints.
 
-The dominant failure mode is duplicated work: a worker reads broadly and the orchestrator rereads everything. DreamTeam therefore tracks compression ratio, main reread ratio, and duplicate deep reads. The orchestrator verifies only consequential evidence and code.
+The dominant waste pattern remains duplicated work. Reads are therefore staged at PreToolUse and committed only if the Git blob is unchanged at PostToolUse. Compact CHP/2 handoffs preserve facts, deductions, unknowns, risks, and unresolved decisions without replaying the complete investigation.
 
-Specialized workers reduce instruction ambiguity, but every added worker also increases routing surface. Worker count is justified through evaluation, not aesthetics.
+Future context caching is intentionally deferred until representative bucketed benchmarks establish where blob, symbol, and query reuse produces a measurable quality-preserving benefit.

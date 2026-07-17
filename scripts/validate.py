@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Validate DreamTeam 0.3 repository and installed-plugin invariants."""
+"""Validate DreamTeam 0.4 repository, generated adapter, and security invariants."""
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -11,7 +12,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 PLUGIN = ROOT / "adapters/claude-code/plugins/dreamteam"
-ALLOWED_AGENT_FIELDS = {"name", "description", "model", "effort", "maxTurns", "tools", "disallowedTools", "skills", "memory", "background", "isolation"}
+ALLOWED_AGENT_FIELDS = {
+    "name", "description", "model", "effort", "maxTurns", "tools",
+    "disallowedTools", "skills", "memory", "background", "isolation",
+}
 FORBIDDEN_AGENT_FIELDS = {"hooks", "mcpServers", "permissionMode"}
 ALLOWED_EFFORT = {"low", "medium", "high", "xhigh", "max"}
 
@@ -44,32 +48,44 @@ def main() -> int:
         PLUGIN / "scripts/dreamteam_route.py",
         PLUGIN / "scripts/dreamteam_measure.py",
         PLUGIN / "scripts/dreamteam_anchor.py",
+        PLUGIN / "scripts/dreamteam_protocol.py",
         PLUGIN / "scripts/dreamteam_ledger_hook.py",
         PLUGIN / "lib/dreamteam/config.py",
         PLUGIN / "lib/dreamteam/routing.py",
+        PLUGIN / "lib/dreamteam/protocol.py",
         PLUGIN / "skills/run/SKILL.md",
         PLUGIN / "skills/review/SKILL.md",
         ROOT / "core/schemas/dreamteam-config.schema.json",
         ROOT / "dreamteam/config.py",
         ROOT / "dreamteam/routing.py",
+        ROOT / "dreamteam/protocol.py",
         ROOT / "dreamteam/ledger.py",
         ROOT / "dreamteam/anchors.py",
         ROOT / "dreamteam/benchmark.py",
+        ROOT / "scripts/measure.py",
         ROOT / "scripts/smoke_plugin_artifact.py",
+        ROOT / "docs/v0.4-implementation-plan.md",
     ]
     for path in required:
         if not path.exists():
             errors.append(f"missing: {path.relative_to(ROOT)}")
-    if (ROOT / ".dreamteam-bootstrap").exists():
-        errors.append("temporary bootstrap directory must not ship")
-    for temporary in ("scripts/bootstrap_v03.py", ".github/workflows/bootstrap-v03.yml", ".github/workflows/remediate-v03.yml"):
+    for temporary in (
+        ".dreamteam-bootstrap",
+        ".dreamteam-tree-probe",
+        ".github/workflows/export-source-temporary.yml",
+        "scripts/bootstrap_v03.py",
+        ".github/workflows/bootstrap-v03.yml",
+        ".github/workflows/remediate-v03.yml",
+    ):
         if (ROOT / temporary).exists():
             errors.append(f"temporary release file must not ship: {temporary}")
 
     try:
         manifest = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
-        if manifest.get("version") != "0.3.0":
-            errors.append("plugin version must be 0.3.0")
+        if manifest.get("version") != "0.4.0":
+            errors.append("plugin version must be 0.4.0")
+        if manifest.get("defaultEnabled") is not False:
+            errors.append("plugin must require explicit enablement")
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", manifest["name"]):
             errors.append("plugin name is not kebab-case")
     except Exception as exc:
@@ -77,8 +93,12 @@ def main() -> int:
 
     try:
         config = json.loads((ROOT / "dreamteam.config.example.json").read_text(encoding="utf-8"))
-        from dreamteam.config import RuntimeConfig
-        RuntimeConfig.from_mapping(config)
+        from dreamteam.config import RuntimeConfig, Topology
+        parsed = RuntimeConfig.from_mapping(config)
+        if Topology.OPUS_SONNET.value != "opus-sonnet":
+            errors.append("opus-sonnet topology is unavailable")
+        if parsed.telemetry.enforcement == "strict" and not parsed.telemetry.enabled:
+            errors.append("strict example config is not enabled")
     except Exception as exc:
         errors.append(f"dreamteam.config.example.json: {exc}")
 
@@ -87,6 +107,10 @@ def main() -> int:
         for event in ("PreToolUse", "PostToolUse", "PostToolUseFailure", "SubagentStart", "SubagentStop"):
             if event not in hooks:
                 errors.append(f"missing hook event: {event}")
+        pre = json.dumps(hooks.get("PreToolUse", []))
+        for tool in ("Read", "Grep", "Glob", "Edit", "Write", "Bash", "Agent"):
+            if tool not in pre:
+                errors.append(f"PreToolUse matcher missing {tool}")
     except Exception as exc:
         errors.append(f"hooks.json: {exc}")
 
@@ -122,12 +146,33 @@ def main() -> int:
             errors.append(str(exc))
     if families != {"coordination", "discovery", "execution", "verification"}:
         errors.append(f"agent families mismatch: {sorted(families)}")
-    if model_counts != {"haiku": 13, "sonnet": 2}:
+    if model_counts != {"haiku": 13, "sonnet": 3}:
         errors.append(f"model mapping mismatch: {model_counts}")
-    if len(names) != 15:
-        errors.append(f"expected 15 agents, found {len(names)}")
+    if len(names) != 16:
+        errors.append(f"expected 16 agents, found {len(names)}")
+    if "execution-sonnet-lead" not in names:
+        errors.append("missing execution-sonnet-lead")
 
-    for module in ("dreamteam.pricing", "dreamteam.config", "dreamteam.routing", "dreamteam.anchors", "dreamteam.ledger", "dreamteam.benchmark"):
+    try:
+        hook_path = PLUGIN / "scripts/dreamteam_ledger_hook.py"
+        spec = importlib.util.spec_from_file_location("dreamteam_validate_hook", hook_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("cannot load hook module")
+        hook_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(hook_module)
+        if set(hook_module.DREAMTEAM_AGENT_TYPES) != names:
+            errors.append("hook agent-type registry does not match generated agents")
+        for script_name in hook_module.TRUSTED_PLUGIN_SCRIPTS:
+            if not (PLUGIN / "scripts" / script_name).is_file():
+                errors.append(f"trusted plugin wrapper is missing: {script_name}")
+    except Exception as exc:
+        errors.append(f"hook registry validation failed: {exc}")
+
+    for module in (
+        "dreamteam.pricing", "dreamteam.config", "dreamteam.routing",
+        "dreamteam.anchors", "dreamteam.ledger", "dreamteam.protocol",
+        "dreamteam.benchmark",
+    ):
         try:
             importlib.import_module(module)
         except Exception as exc:
@@ -140,11 +185,21 @@ def main() -> int:
 
     for skill in (PLUGIN / "skills").glob("*/SKILL.md"):
         text = skill.read_text(encoding="utf-8")
-        if "DreamTeam" in text and "0.2" in text:
-            errors.append(f"stale 0.2 skill: {skill.relative_to(ROOT)}")
+        if "DreamTeam" in text and ("0.2" in text or "0.3" in text):
+            errors.append(f"stale skill version: {skill.relative_to(ROOT)}")
     profiles = (PLUGIN / "skills/run/references/profiles.md").read_text(encoding="utf-8")
-    if "Profile 0.3" not in profiles:
+    if "Profile 0.4" not in profiles:
         errors.append("generated profiles reference is stale")
+    routing = (PLUGIN / "skills/run/references/routing-policy.md").read_text(encoding="utf-8")
+    if "Opus-Sonnet" not in routing:
+        errors.append("generated routing reference lacks Opus-Sonnet")
+
+    for template in (ROOT / "core/templates").glob("*.txt"):
+        content = template.read_text(encoding="utf-8")
+        if "CONTRACT|UNAVAILABLE" in content:
+            errors.append(
+                f"strict-incompatible template contract: {template.relative_to(ROOT)}"
+            )
 
     for path in ROOT.rglob("*.md"):
         text = path.read_text(encoding="utf-8")

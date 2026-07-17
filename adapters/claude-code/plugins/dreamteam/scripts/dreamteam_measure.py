@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the non-spending benchmark summary from the installed plugin."""
+"""Run the non-spending DreamTeam 0.4 benchmark summary from the plugin."""
 from __future__ import annotations
 
 import argparse
@@ -23,7 +23,12 @@ def main() -> int:
         print("preflight: paid inference disabled")
         return 0
     data = json.loads(args.results.read_text(encoding="utf-8"))
-    print(json.dumps(summarize(pair_results(load_results(data)), minimum_savings_margin=args.minimum_savings_margin, minimum_samples=args.minimum_samples), indent=2, sort_keys=True))
+    result = summarize(
+        pair_results(load_results(data)),
+        minimum_savings_margin=args.minimum_savings_margin,
+        minimum_samples=args.minimum_samples,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 

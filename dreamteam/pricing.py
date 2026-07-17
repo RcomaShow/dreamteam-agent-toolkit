@@ -9,6 +9,12 @@ from typing import Mapping
 
 MTOK = Decimal("1000000")
 
+MODEL_ALIASES: Mapping[str, str] = {
+    "haiku": "claude-haiku-4-5",
+    "sonnet": "claude-sonnet-5",
+    "opus": "claude-opus-4-8",
+}
+
 
 class ExecutionLane(str, Enum):
     INTERACTIVE = "interactive"
@@ -36,7 +42,7 @@ class TokenUsage:
 
     def __post_init__(self) -> None:
         for name, value in self.__dict__.items():
-            if not isinstance(value, int) or isinstance(value, bool):
+            if type(value) is not int:
                 raise TypeError(f"{name} must be an integer")
             if value < 0:
                 raise ValueError(f"{name} must be non-negative")
@@ -66,6 +72,16 @@ class CostBreakdown:
     pricing_catalog_id: str
 
 
+def resolve_model(model: str, *, inherited: str | None = None) -> str:
+    if not isinstance(model, str) or not model:
+        raise TypeError("model must be a non-empty string")
+    if model == "inherit":
+        if inherited is None:
+            raise ValueError("inherit requires an explicit inherited model")
+        model = inherited
+    return MODEL_ALIASES.get(model, model)
+
+
 class PriceBook:
     """Immutable pricing snapshot used for routing and benchmark reproducibility."""
 
@@ -73,6 +89,16 @@ class PriceBook:
         if not isinstance(as_of, date):
             raise TypeError("as_of must be a date")
         self.as_of = as_of
+
+    @classmethod
+    def from_catalog_id(cls, catalog_id: str) -> "PriceBook":
+        prefix = "anthropic-api-"
+        if not isinstance(catalog_id, str) or not catalog_id.startswith(prefix):
+            raise ValueError("unsupported pricing catalog id")
+        try:
+            return cls(date.fromisoformat(catalog_id[len(prefix) :]))
+        except ValueError as exc:
+            raise ValueError("invalid pricing catalog date") from exc
 
     @property
     def catalog_id(self) -> str:
@@ -89,10 +115,11 @@ class PriceBook:
         }
 
     def get(self, model: str) -> ModelPrice:
+        resolved = resolve_model(model)
         try:
-            return self.prices[model]
+            return self.prices[resolved]
         except KeyError as exc:
-            raise KeyError(f"unknown pricing model: {model}") from exc
+            raise KeyError(f"unknown pricing model: {resolved}") from exc
 
 
 def _usd(tokens: int, per_mtok: Decimal) -> Decimal:
@@ -108,7 +135,8 @@ def estimate_cost(
 ) -> CostBreakdown:
     if not isinstance(lane, ExecutionLane):
         lane = ExecutionLane(lane)
-    price = price_book.get(model)
+    resolved = resolve_model(model)
+    price = price_book.get(resolved)
     multiplier = price.batch_multiplier if lane is ExecutionLane.BATCH else Decimal("1")
     input_usd = _usd(usage.input_tokens, price.input_per_mtok) * multiplier
     output_usd = _usd(usage.output_tokens, price.output_per_mtok) * multiplier
@@ -127,7 +155,7 @@ def estimate_cost(
         cache_read_usd=cache_read_usd,
         cache_write_usd=cache_write_usd,
         total_usd=total,
-        model=model,
+        model=resolved,
         lane=lane,
         pricing_catalog_id=price_book.catalog_id,
     )

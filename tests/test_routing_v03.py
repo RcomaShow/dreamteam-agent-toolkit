@@ -21,7 +21,7 @@ def cfg(topology=Topology.LEAN, batch=False):
         },
         "budgets": {"maxRunUsd": 10, "maxActiveWorkers": 1, "maxRetries": 1, "maxWorkerTurns": 10},
         "verification": {"requireIndependentWriterReview": True, "requireAnchorValidation": True},
-        "telemetry": {"storeSourceContent": False, "ledger": "off", "enforcement": "advisory"},
+        "telemetry": {"enabled": False, "storeSourceContent": False, "ledger": "off", "enforcement": "advisory"},
     }
     return RuntimeConfig.from_mapping(data)
 
@@ -31,28 +31,37 @@ def request(**overrides):
         criticality=Criticality.M0,
         task_kind=TaskKind.DISCOVERY,
         direct_usage=TokenUsage(input_tokens=100_000, output_tokens=2_000),
-        worker_usage=TokenUsage(input_tokens=100_000, output_tokens=500),
-        lead_usage=TokenUsage(input_tokens=1_000, output_tokens=200),
+        worker_usage=TokenUsage(input_tokens=50_000, output_tokens=500),
+        lead_usage=TokenUsage(),
         verifier_usage=TokenUsage(),
-        executive_usage=TokenUsage(input_tokens=500, output_tokens=100),
+        executive_usage=TokenUsage(),
         retry_probability=Decimal("0.02"),
         escalation_probability=Decimal("0.02"),
-        independent_verifier_available=True,
+        independent_verifier_available=False,
         calibration_samples=20,
     )
     values.update(overrides)
     return RouteRequest(**values)
 
 
-class RoutingTests(unittest.TestCase):
+def frontier_request(**overrides):
+    values = dict(
+        lead_usage=TokenUsage(input_tokens=10_000, output_tokens=500),
+        executive_usage=TokenUsage(input_tokens=5_000, output_tokens=200),
+    )
+    values.update(overrides)
+    return request(**values)
+
+
+class RoutingCompatibilityTests(unittest.TestCase):
     def test_baseline_is_sonnet_for_frontier(self):
-        decision = choose_route(request(), config=cfg(Topology.FRONTIER))
+        decision = choose_route(frontier_request(), config=cfg(Topology.FRONTIER))
         self.assertEqual(decision.direct_forecast.components[0].model, "claude-sonnet-5")
-        self.assertTrue(any(c.model == "claude-opus-4-8" for c in decision.candidate_forecast.components))
+        self.assertTrue(any(component.model == "claude-opus-4-8" for component in decision.candidate_forecast.components))
 
     def test_frontier_costs_more_than_lean_when_opus_is_present(self):
         lean = choose_route(request(), config=cfg(Topology.LEAN))
-        frontier = choose_route(request(), config=cfg(Topology.FRONTIER))
+        frontier = choose_route(frontier_request(), config=cfg(Topology.FRONTIER))
         self.assertGreater(frontier.candidate_delegated_usd, lean.candidate_delegated_usd)
 
     def test_direct_output_is_independent_from_worker_output(self):
@@ -67,7 +76,7 @@ class RoutingTests(unittest.TestCase):
         self.assertIsNotNone(result.candidate_delegated_usd)
 
     def test_writer_requires_independent_verifier(self):
-        result = choose_route(request(task_kind=TaskKind.IMPLEMENTATION, independent_verifier_available=False), config=cfg())
+        result = choose_route(request(task_kind=TaskKind.IMPLEMENTATION), config=cfg())
         self.assertEqual(result.selected_route, Route.MAIN_DIRECT)
         self.assertIn("INDEPENDENT_VERIFIER_REQUIRED", result.reason_codes)
 
@@ -84,6 +93,7 @@ class RoutingTests(unittest.TestCase):
         req = request(
             task_kind=TaskKind.IMPLEMENTATION,
             verifier_usage=TokenUsage(input_tokens=20_000, output_tokens=5_000),
+            independent_verifier_available=True,
             retry_probability=Decimal("0.50"),
         )
         result = choose_route(req, config=cfg())

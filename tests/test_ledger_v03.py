@@ -44,7 +44,7 @@ class LedgerTests(unittest.TestCase):
             self.assertEqual(ledger.remaining("r", 100), 50)
             self.assertTrue(ledger.reconcile("r", "n1", 70, 100))
             ledger.release("r", "n1")
-            self.assertEqual(ledger.remaining("r", 100), 100)
+            self.assertEqual(ledger.remaining("r", 100), 30)
         finally:
             ledger.close()
 

@@ -1,4 +1,4 @@
-# DreamTeam 0.3 Worker Catalog
+# DreamTeam 0.4 Worker Catalog
 
 | Agent | Model | Effort | Role |
 |---|---|---|---|
@@ -12,6 +12,7 @@
 | `execution-bounded-logic` | `haiku` | `medium` | Implement completely specified local L1 logic with enumerated branches, explicit inputs/outputs, closed symbols, and targeted tests. |
 | `execution-test-writer` | `haiku` | `medium` | Implement unit, component, or contract tests from an orchestrator-approved case matrix. Never decide the correct behavior. |
 | `execution-documentation-updater` | `haiku` | `low` | Update bounded technical documentation from approved code changes, decisions, and verification results. No new product or architecture decisions. |
+| `execution-sonnet-lead` | `sonnet` | `high` | Plan, implement, or integrate bounded L1/L2 work delegated by an Opus executive, especially when Haiku would require too much transferred reasoning context. |
 | `verification-failure-triage` | `haiku` | `medium` | Diagnose verbose compilation, test, runtime, dependency, configuration, environment, or timeout failures without modifying files. |
 | `verification-diff-auditor` | `haiku` | `medium` | Classify a bounded diff by mechanical, logical, contract, security, and scope risk so the orchestrator reviews only consequential regions. |
 | `verification-test-gap-finder` | `haiku` | `low` | Compare specified branches and behavior against existing tests to identify missing cases without writing tests. |

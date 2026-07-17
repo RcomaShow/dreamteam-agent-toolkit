@@ -1,4 +1,4 @@
-# Economy Profile 0.3
+# Economy Profile 0.4
 
 Primary target: minimize total API-equivalent USD and startup overhead.
 
@@ -12,4 +12,4 @@ allow_closed_context_batch=false
 verification=independent_for_writes
 ```
 
-Prefer `MAIN_DIRECT` for small, hot-context, or weakly calibrated tasks. Delegation must clear the USD gate; compression ratio alone is insufficient.
+These values are runtime defaults, not documentation-only suggestions. Prefer `MAIN_DIRECT` for small, hot-context, or weakly calibrated work.

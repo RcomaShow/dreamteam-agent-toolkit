@@ -1,4 +1,4 @@
-# Balanced Profile 0.3
+# Balanced Profile 0.4
 
 Default conservative compromise between cost, main-model load, and confidence.
 
@@ -12,4 +12,4 @@ allow_closed_context_batch=false
 verification=independent_for_writes
 ```
 
-Use Lean by default. Frontier requires explicit Opus forecast and a quality justification.
+Use Lean by default. Use Opus-Sonnet when the Opus executive can transfer a bounded L1/L2 implementation to Sonnet without most of its reasoning context. Frontier requires explicit Opus, Sonnet, and Haiku accounting.

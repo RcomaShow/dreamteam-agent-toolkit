@@ -1,12 +1,14 @@
-# DreamTeam Claude Code Plugin 0.3
+# DreamTeam Claude Code Plugin 0.4
+
+The plugin installs disabled by default because it contributes enforcement hooks. Enable it explicitly after reviewing the project configuration.
 
 Commands:
 
-- `/dreamteam:run topology=<lean|frontier> profile=<economy|balanced|offload|quality> <task>`
+- `/dreamteam:run topology=<lean|opus-sonnet|frontier> profile=<economy|balanced|offload|quality> <task>`
 - `/dreamteam:review`
-- `/dreamteam:measure`
+- `/dreamteam:measure <results.json>`
 - `/dreamteam:doctor`
 
-The plugin is self-contained: `lib/dreamteam` holds the runtime, `scripts/` exposes routing/measurement/anchor/hook entry points, and `hooks/hooks.json` provides metadata-only enforcement.
+The plugin is self-contained. `lib/dreamteam` contains the canonical runtime; `scripts/` exposes routing, protocol, measurement, anchor, and hook entry points; and `hooks/hooks.json` applies project-root, budget, reread, nested-dispatch, and protected-config policy.
 
-There are thirteen Haiku workers, one Sonnet decision analyst, and one Sonnet independent reviewer. Workers never spawn agents. Hooks are advisory unless project config enables SQLite telemetry with strict enforcement.
+The catalog contains thirteen Haiku workers and three Sonnet roles. `opus-sonnet` is an explicit Opus executive → Sonnet lead/reviewer path with no hidden Haiku component. Workers never spawn agents, and writing roles require a different acceptance oracle.

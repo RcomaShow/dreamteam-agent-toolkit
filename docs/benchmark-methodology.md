@@ -1,9 +1,9 @@
-# DreamTeam 0.3 Benchmark Methodology
+# DreamTeam 0.4 Benchmark Methodology
 
-Compare pinned Sonnet 5 direct against DreamTeam Lean or Frontier on the same commit, task, quality oracle, environment, and time limits. Randomize arm order and separate cold/warm-cache cohorts.
+Compare a pinned Sonnet direct arm against DreamTeam Lean, Opus-Sonnet, or Frontier on the same task, commit, oracle, config hash, environment, timeout, and cache cohort. Randomize arm order and preserve replicates.
 
-Each run records run/pair/replicate IDs, commit, archetype, topology, route, model usage and effort, cache cohort, arm order, oracle, strict boolean quality result, billed USD, API-equivalent USD, tokens, reread bytes, retries, escalations, failures, elapsed time, and pricing catalog.
+Every run records adapter version, archetype, criticality, task kind, size band, concrete agent role, topology, route, model and effort usage, execution lane, cache operations, billed USD, API-equivalent USD, tokens, reread bytes, retries, escalations, failures, elapsed time, and pricing catalog. API-equivalent USD is recomputed from model usage, and aggregate token/cache counters must reconcile with the per-model records; mismatches invalidate the row.
 
-Duplicate arms, missing arms, unknown fields, string booleans, mismatched oracle/commit/catalog, and zero direct cost invalidate economic claims.
+Duplicate run IDs or arms, missing arms, unknown fields, string booleans, mismatched pair invariants, identical arm order, non-finite values, and zero direct cost invalidate economic claims.
 
-Report median, mean, p10, negative-ROI pairs, failure rate, and per-archetype distributions. Distinguish quality, positive-direction, margin, and publication claims. Publication requires full quality parity, positive median, configured margin, minimum samples, and positive p10.
+Report median, mean, p10, negative-ROI pairs, quality parity, failures, latency, forecast error, and per-bucket distributions. Publication requires complete quality parity plus minimum samples, configured median margin, and positive p10 in every reported bucket.

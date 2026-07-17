@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from pathlib import Path
 import tempfile
 import unittest
@@ -27,7 +28,7 @@ class ConfigTests(unittest.TestCase):
     def test_defaults_and_snapshot(self):
         parsed = RuntimeConfig.from_mapping(config())
         self.assertEqual(parsed.pricing_as_of.isoformat(), "2026-07-17")
-        self.assertEqual(str(parsed.routing.minimum_savings_margin), "0.3")
+        self.assertEqual(parsed.routing.minimum_savings_margin, Decimal("0.30"))
 
     def test_unknown_property_rejected(self):
         data = config(); data["unknown"] = 1

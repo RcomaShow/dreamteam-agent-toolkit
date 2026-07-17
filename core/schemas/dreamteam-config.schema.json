@@ -1,66 +1,229 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "DreamTeam 0.3 Configuration",
+  "title": "DreamTeam 0.4 Configuration",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "version": {"const": 2},
-    "constitution": {"const": "DT-C1"},
-    "topology": {"enum": ["lean", "frontier"]},
-    "profile": {"enum": ["economy", "balanced", "offload", "quality"]},
-    "pricingAsOf": {"type": "string", "format": "date"},
+    "version": {
+      "const": 2
+    },
+    "constitution": {
+      "const": "DT-C1"
+    },
+    "topology": {
+      "enum": [
+        "lean",
+        "opus-sonnet",
+        "frontier"
+      ]
+    },
+    "profile": {
+      "enum": [
+        "economy",
+        "balanced",
+        "offload",
+        "quality"
+      ]
+    },
+    "pricingAsOf": {
+      "type": "string",
+      "format": "date"
+    },
     "models": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "executive": {"type": "string", "minLength": 1},
-        "lead": {"type": "string", "minLength": 1},
-        "workers": {"type": "string", "minLength": 1}
+        "executive": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lead": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workers": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "routing": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "minimumSavingsMargin": {"type": "number", "minimum": 0, "maximum": 1},
-        "maxEscalationProbability": {"type": "number", "minimum": 0, "maximum": 1},
-        "maxMainRereadRatio": {"type": "number", "minimum": 0, "maximum": 1},
-        "minSamplesForEnforcement": {"type": "integer", "minimum": 1},
-        "allowClosedContextBatch": {"type": "boolean"},
-        "allowParallelIndependent": {"type": "boolean"}
+        "minimumSavingsMargin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "maxEscalationProbability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "maxMainRereadRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "minSamplesForEnforcement": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "allowClosedContextBatch": {
+          "type": "boolean"
+        },
+        "allowParallelIndependent": {
+          "type": "boolean"
+        }
       }
     },
     "budgets": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "maxRunUsd": {"type": "number", "minimum": 0},
-        "maxActiveWorkers": {"type": "integer", "minimum": 1, "maximum": 4},
-        "maxRetries": {"type": "integer", "minimum": 0},
-        "maxWorkerTurns": {"type": "integer", "minimum": 1}
+        "maxRunUsd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxActiveWorkers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxWorkerTurns": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "verification": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "requireIndependentWriterReview": {"const": true},
-        "requireAnchorValidation": {"const": true},
-        "allowFullSuite": {"enum": ["orchestrator-only", "allowed"]}
+        "requireIndependentWriterReview": {
+          "const": true
+        },
+        "requireAnchorValidation": {
+          "const": true
+        },
+        "allowFullSuite": {
+          "enum": [
+            "orchestrator-only",
+            "allowed"
+          ]
+        }
       },
-      "required": ["requireIndependentWriterReview", "requireAnchorValidation"]
+      "required": [
+        "requireIndependentWriterReview",
+        "requireAnchorValidation"
+      ]
     },
     "telemetry": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": {"type": "boolean"},
-        "storeSourceContent": {"const": false},
-        "ledger": {"enum": ["off", "sqlite"]},
-        "enforcement": {"enum": ["advisory", "strict"]}
+        "enabled": {
+          "type": "boolean"
+        },
+        "storeSourceContent": {
+          "const": false
+        },
+        "ledger": {
+          "enum": [
+            "off",
+            "sqlite"
+          ]
+        },
+        "enforcement": {
+          "enum": [
+            "advisory",
+            "strict"
+          ]
+        }
       },
-      "required": ["storeSourceContent", "ledger", "enforcement"]
+      "required": [
+        "enabled",
+        "storeSourceContent",
+        "ledger",
+        "enforcement"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            },
+            "required": [
+              "enabled"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ledger": {
+                "const": "sqlite"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": false
+              }
+            },
+            "required": [
+              "enabled"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ledger": {
+                "const": "off"
+              },
+              "enforcement": {
+                "const": "advisory"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enforcement": {
+                "const": "strict"
+              }
+            },
+            "required": [
+              "enforcement"
+            ]
+          },
+          "then": {
+            "properties": {
+              "enabled": {
+                "const": true
+              },
+              "ledger": {
+                "const": "sqlite"
+              }
+            }
+          }
+        }
+      ]
     }
   },
-  "required": ["version", "topology", "pricingAsOf", "verification", "telemetry"]
+  "required": [
+    "version",
+    "topology",
+    "pricingAsOf",
+    "verification",
+    "telemetry"
+  ]
 }
