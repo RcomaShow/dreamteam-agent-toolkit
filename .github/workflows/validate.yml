@@ -9,8 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python scripts/validate.py
-      - run: python -m unittest discover -s tests -v
+      - name: Generate adapter
+        run: python scripts/sync_claude_adapter.py
+      - name: Check generated drift
+        run: git diff --exit-code
+      - name: Validate repository
+        run: python scripts/validate.py
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Benchmark preflight
+        run: python scripts/measure_v03.py
+      - name: Compile runtime
+        run: python -m compileall dreamteam adapters/claude-code/plugins/dreamteam
+      - name: Build release archives
+        run: python scripts/build_release.py
+      - name: Smoke-test plugin artifact
+        run: python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.3.0.zip

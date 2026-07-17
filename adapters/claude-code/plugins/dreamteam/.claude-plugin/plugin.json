@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "dreamteam",
   "displayName": "DreamTeam",
-  "version": "0.2.0",
-  "description": "Constitution-guided, token-aware routing between an orchestrator and specialized low-cost workers, with explicit code ownership and protocol validation.",
+  "version": "0.3.0",
+  "description": "Cost-proof tiered orchestration with Lean and Frontier topologies, compact evidence, independent verification, and measured USD routing.",
   "author": {
     "name": "RcomaShow",
     "url": "https://github.com/RcomaShow"
@@ -15,9 +15,9 @@
     "agents",
     "orchestration",
     "token-optimization",
-    "coding",
-    "multi-model",
-    "efficiency"
+    "cost-routing",
+    "claude-code",
+    "multi-model"
   ],
   "defaultEnabled": true
 }

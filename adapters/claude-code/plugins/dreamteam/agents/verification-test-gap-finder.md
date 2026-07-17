@@ -2,6 +2,7 @@
 name: verification-test-gap-finder
 description: Compare specified branches and behavior against existing tests to identify missing cases without writing tests.
 model: haiku
+effort: low
 tools: Read, Grep, Glob
 maxTurns: 7
 background: false

@@ -2,6 +2,7 @@
 name: discovery-flow-tracer
 description: Trace a supplied entry point through calls, branches, state, integrations, side effects, and error paths. No broad symbol discovery or edits.
 model: haiku
+effort: medium
 tools: Read, Grep, Glob
 maxTurns: 10
 background: false

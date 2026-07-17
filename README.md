@@ -2,56 +2,49 @@
 
 **The right agent for every task. Orchestrate smarter. Spend less.**
 
-DreamTeam is a platform-independent toolkit for constitution-guided, token-aware multi-agent engineering. It routes bounded high-volume work to specialized low-cost workers while keeping consequential decisions, code, and final ownership with the orchestrator.
+DreamTeam 0.3 is a constitution-guided, cost-proof orchestration toolkit with executable runtime enforcement and a self-contained Claude Code plugin.
 
-## 0.2 principles
+## Topologies
 
-- **Haiku handles volume; the orchestrator handles consequence.**
-- Optimize total tokens, main-model tokens, and weighted cost separately.
-- Use one of five explicit routes: `MAIN_DIRECT`, `WORKER_READ`, `WORKER_WRITE`, `HYBRID_EDIT`, or `HIGH_CAPABILITY_WORKER`.
-- Classify work as `M0`, `L1`, `L2`, or `C3` before assigning edit ownership.
-- Use DCP/2 contracts and CHP/2 handoffs with parsable validation.
-- Avoid duplicated investigation and verify proportionately to risk.
-- No Agent Teams, nested agents, hooks, or telemetry are enabled by default.
+```text
+Lean:      Sonnet 5 executive → Haiku 4.5 bounded workers
+Frontier:  Opus 4.8 executive → Sonnet 5 lead/reviewer → Haiku 4.5 workers
+```
 
-## Claude Code adapter
+Physical dispatch remains flat. Workers cannot spawn workers. C3 and public-contract ownership stays with the executive, and a writer cannot be its own acceptance oracle.
+
+## Cost-proof runtime
+
+The bundled runtime provides strict configuration, reproducible pricing snapshots, whole-tree Lean/Frontier forecasts, Batch gating, exact reread accounting, SQLite checkpoints/budgets, source anchors, and fail-closed benchmark claims.
+
+The direct baseline is always Sonnet 5-only. Frontier includes explicit Opus usage. Batch requires config opt-in, a real executor, closed context, and retention confirmation.
+
+## Claude Code
 
 ```text
 /plugin marketplace add RcomaShow/dreamteam-agent-toolkit
 /plugin install dreamteam@dreamteam-tools
-```
-
-Commands:
-
-```text
-/dreamteam:run profile=offload <task>
+/dreamteam:run topology=lean profile=balanced <task>
 /dreamteam:review
-/dreamteam:measure
+/dreamteam:measure results.json
 /dreamteam:doctor
 ```
 
-Profiles:
-
-- `economy`: minimize total usage;
-- `balanced`: default weighted compromise;
-- `offload`: minimize main/high-capability-model work;
-- `quality`: expanded verification and optional isolated high-capability analysis.
-
-## Worker families
-
-- discovery: symbol location, flow tracing, pattern mining, impact mapping, context synthesis;
-- execution: scaffolding, mechanical edits, bounded logic, tests, documentation;
-- verification: failure triage, diff audit, test gaps.
+The installable plugin contains the runtime under `lib/dreamteam`, executable scripts, 15 scoped agents, and advisory/strict hooks. No provider executor or paid inference is bundled.
 
 ## Validate
 
 ```bash
 python scripts/sync_claude_adapter.py
+git diff --exit-code
 python scripts/validate.py
 python -m unittest discover -s tests -v
+python scripts/measure_v03.py
+python scripts/build_release.py
+python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.3.0.zip
 ```
 
-See `docs/v0.2-design.md`, `core/constitution/`, and `core/routing/` for the design.
+Version 0.3 provides machinery to prove savings; it does not claim universal empirical savings until representative paired benchmarks pass the publication gate.
 
 ## License
 

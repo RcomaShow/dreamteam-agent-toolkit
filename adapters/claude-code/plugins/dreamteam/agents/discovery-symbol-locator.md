@@ -2,6 +2,7 @@
 name: discovery-symbol-locator
 description: Locate exact files, symbols, definitions, and references for a bounded question. No flow analysis, design, or edits.
 model: haiku
+effort: low
 tools: Read, Grep, Glob
 maxTurns: 4
 background: false

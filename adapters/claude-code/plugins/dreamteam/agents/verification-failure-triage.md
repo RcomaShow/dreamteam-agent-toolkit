@@ -2,6 +2,7 @@
 name: verification-failure-triage
 description: Diagnose verbose compilation, test, runtime, dependency, configuration, environment, or timeout failures without modifying files.
 model: haiku
+effort: medium
 tools: Read, Grep, Glob, Bash
 maxTurns: 8
 background: false

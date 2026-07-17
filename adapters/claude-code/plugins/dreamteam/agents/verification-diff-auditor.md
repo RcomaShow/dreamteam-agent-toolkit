@@ -2,6 +2,7 @@
 name: verification-diff-auditor
 description: Classify a bounded diff by mechanical, logical, contract, security, and scope risk so the orchestrator reviews only consequential regions.
 model: haiku
+effort: medium
 tools: Read, Grep, Glob, Bash
 maxTurns: 8
 background: false

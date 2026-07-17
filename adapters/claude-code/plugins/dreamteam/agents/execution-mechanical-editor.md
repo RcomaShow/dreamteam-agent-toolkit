@@ -2,6 +2,7 @@
 name: execution-mechanical-editor
 description: Apply a precise repetitive transformation to existing files after enumerating targets and exceptions.
 model: haiku
+effort: low
 tools: Read, Grep, Glob, Edit, Write
 maxTurns: 10
 background: false

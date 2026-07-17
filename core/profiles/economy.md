@@ -1,17 +1,15 @@
-# Economy Profile
+# Economy Profile 0.3
 
-Primary target: minimize total usage and delegation overhead.
+Primary target: minimize total API-equivalent USD and startup overhead.
 
 ```text
-optimization_target=total_tokens
+minimum_savings_margin=0.40
 max_active_workers=1
-max_worker_chain=1
+max_retries=0
 max_worker_turns=6
-max_deep_reads=6
-max_output_records=16
-max_retries=1
-parallelism=off
-orchestrator_verification=critical_evidence_diff_and_targeted_checks
+allow_parallel_independent=false
+allow_closed_context_batch=false
+verification=independent_for_writes
 ```
 
-Prefer MAIN_DIRECT for small tasks and a single worker only for clearly beneficial work.
+Prefer `MAIN_DIRECT` for small, hot-context, or weakly calibrated tasks. Delegation must clear the USD gate; compression ratio alone is insufficient.

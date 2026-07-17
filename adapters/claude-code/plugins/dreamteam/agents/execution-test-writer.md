@@ -2,6 +2,7 @@
 name: execution-test-writer
 description: Implement unit, component, or contract tests from an orchestrator-approved case matrix. Never decide the correct behavior.
 model: haiku
+effort: medium
 tools: Read, Grep, Glob, Edit, Write, Bash
 maxTurns: 12
 background: false

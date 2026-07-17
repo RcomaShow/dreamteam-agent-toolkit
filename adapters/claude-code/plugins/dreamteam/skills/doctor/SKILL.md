@@ -1,27 +1,33 @@
 ---
 name: doctor
-description: Inspect DreamTeam plugin version, configuration, model mappings, environment overrides, worker catalog, protocol version, and validation readiness.
+description: Inspect DreamTeam 0.3 runtime packaging, config, pricing snapshot, hooks, agents, budget gates, telemetry, and validation readiness.
 argument-hint: "[optional project path]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Doctor
+# DreamTeam Doctor 0.3
 
 Inspect without changing configuration:
 
 ```text
-PLUGIN_VERSION|
-CONSTITUTION|DT-C1
-PROTOCOL|DCP/2,CHP/2
-ACTIVE_PROFILE|
-CONFIG_SOURCE|
-MAIN_MODEL|
-WORKER_MODEL_MAPPING|haiku
-SUBAGENT_MODEL_OVERRIDE|
-AVAILABLE_WORKERS|
-OPTIONAL_HOOKS|disabled
-VALIDATOR_STATUS|
+PLUGIN_VERSION|0.3.0
+RUNTIME_IMPORT|PASS|FAIL
+CONFIG_VERSION|2
+PRICING_AS_OF|
+PRICING_CATALOG_ID|
+TOPOLOGY|lean|frontier
+AGENT_COUNTS|haiku=13;sonnet=2
+HOOKS|available|disabled-by-policy
+LEDGER|off|sqlite
+ENFORCEMENT|advisory|strict
+BATCH_GATE|config;capability;closed_context;retention
+MINIMUM_SAVINGS_MARGIN|
+MAX_RUN_USD|
+MAIN_REREAD_LIMIT|
+STORE_SOURCE_CONTENT|false
+SYNC_STATUS|
+ARTIFACT_SMOKE_STATUS|
 WARNINGS|
 ```
 
-Check for `dreamteam.config.json`, `CLAUDE_CODE_SUBAGENT_MODEL`, missing agents/references, invalid JSON, unsupported profile values, and unavailable targeted commands. Do not expose secrets or full environment values.
+Check for unsupported config, missing pricing snapshot, stale anchors, self-review, unreserved Agent dispatch, broad worker overlap, source-content persistence, missing plugin runtime, and model overrides. Do not expose secrets.

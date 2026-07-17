@@ -1,125 +1,66 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "DreamTeam Configuration",
+  "title": "DreamTeam 0.3 Configuration",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "version": {
-      "const": 1
-    },
-    "constitution": {
-      "type": "string",
-      "default": "DT-C1"
-    },
-    "profile": {
-      "enum": [
-        "economy",
-        "balanced",
-        "offload",
-        "quality"
-      ],
-      "default": "balanced"
-    },
+    "version": {"const": 2},
+    "constitution": {"const": "DT-C1"},
+    "topology": {"enum": ["lean", "frontier"]},
+    "profile": {"enum": ["economy", "balanced", "offload", "quality"]},
+    "pricingAsOf": {"type": "string", "format": "date"},
     "models": {
       "type": "object",
-      "additionalProperties": {
-        "type": "string"
+      "additionalProperties": false,
+      "properties": {
+        "executive": {"type": "string", "minLength": 1},
+        "lead": {"type": "string", "minLength": 1},
+        "workers": {"type": "string", "minLength": 1}
       }
     },
     "routing": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "directMaxLocalFiles": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 2
-        },
-        "targetCompressionRatio": {
-          "type": "number",
-          "minimum": 1,
-          "default": 4
-        },
-        "maxMainRereadRatio": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "default": 0.35
-        },
-        "maxActiveWorkers": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 4,
-          "default": 1
-        },
-        "allowParallelIndependent": {
-          "type": "boolean",
-          "default": false
-        }
+        "minimumSavingsMargin": {"type": "number", "minimum": 0, "maximum": 1},
+        "maxEscalationProbability": {"type": "number", "minimum": 0, "maximum": 1},
+        "maxMainRereadRatio": {"type": "number", "minimum": 0, "maximum": 1},
+        "minSamplesForEnforcement": {"type": "integer", "minimum": 1},
+        "allowClosedContextBatch": {"type": "boolean"},
+        "allowParallelIndependent": {"type": "boolean"}
       }
     },
     "budgets": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "maxWorkerTurns": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 10
-        },
-        "maxDeepReads": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 10
-        },
-        "maxHandoffRecords": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 24
-        },
-        "maxRetries": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 1
-        }
+        "maxRunUsd": {"type": "number", "minimum": 0},
+        "maxActiveWorkers": {"type": "integer", "minimum": 1, "maximum": 4},
+        "maxRetries": {"type": "integer", "minimum": 0},
+        "maxWorkerTurns": {"type": "integer", "minimum": 1}
       }
     },
     "verification": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "reviewEveryDiff": {
-          "type": "boolean",
-          "default": true
-        },
-        "requireTargetedTest": {
-          "type": "boolean",
-          "default": true
-        },
-        "allowFullSuite": {
-          "enum": [
-            "orchestrator-only",
-            "allowed"
-          ],
-          "default": "orchestrator-only"
-        }
-      }
+        "requireIndependentWriterReview": {"const": true},
+        "requireAnchorValidation": {"const": true},
+        "allowFullSuite": {"enum": ["orchestrator-only", "allowed"]}
+      },
+      "required": ["requireIndependentWriterReview", "requireAnchorValidation"]
     },
     "telemetry": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false
-        },
-        "storeSourceContent": {
-          "const": false
-        }
-      }
+        "enabled": {"type": "boolean"},
+        "storeSourceContent": {"const": false},
+        "ledger": {"enum": ["off", "sqlite"]},
+        "enforcement": {"enum": ["advisory", "strict"]}
+      },
+      "required": ["storeSourceContent", "ledger", "enforcement"]
     }
   },
-  "required": [
-    "version"
-  ]
+  "required": ["version", "topology", "pricingAsOf", "verification", "telemetry"]
 }

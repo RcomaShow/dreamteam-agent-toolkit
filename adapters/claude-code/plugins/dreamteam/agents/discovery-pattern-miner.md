@@ -2,6 +2,7 @@
 name: discovery-pattern-miner
 description: Find and compare up to three analogous implementations, tests, or conventions for an already-defined structure or behavior.
 model: haiku
+effort: low
 tools: Read, Grep, Glob
 maxTurns: 7
 background: false
