@@ -1,20 +1,18 @@
 ---
 name: measure
-description: Summarize strict paired DreamTeam benchmarks with quality parity, API-equivalent and billed USD, replications, cache cohorts, and fail-closed claim decisions.
+description: Summarize strict DreamTeam 0.4 paired benchmarks with recomputed costs, pair invariants, cache cohorts, bucket gates, and fail-closed claims.
 argument-hint: "<results.json>"
 disable-model-invocation: true
 ---
 
-# DreamTeam Measure 0.3
+# DreamTeam Measure 0.4
 
-Use the same commit, task, oracle, environment, and time limits for both arms. Randomize arm order and separate cold/warm-cache cohorts.
-
-Run the bundled non-spending command:
+Use the same task, commit, oracle, config hash, environment, timeout, and cache cohort for both arms. Randomize arm order.
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/dreamteam_measure.py" results.json
 ```
 
-The complete execution tree must include executive, lead, workers, verifier, retries, escalations, failures, cache operations, reread bytes, and pricing catalog. Strings are not accepted as booleans. Duplicate arms and missing arms are errors.
+Every row must include adapter version, config/environment identifiers, timeout, model usage, lane, cache operations, retries, escalations, failures, reread bytes, billed USD, and API-equivalent USD. The runtime recomputes API-equivalent USD from model usage and rejects mismatches.
 
-A publication claim requires complete quality parity, positive median savings, configured margin, minimum samples, and a positive lower-tail result. No provider executor is bundled.
+Publication requires complete quality parity plus sample, margin, and positive lower-tail gates in every reported task bucket. No provider executor is bundled.

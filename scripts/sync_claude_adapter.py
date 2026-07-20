@@ -21,6 +21,7 @@ AGENTS = {
     "execution-bounded-logic": ("bounded-logic-implementer", "haiku", "medium", "Read, Grep, Glob, Edit, Write, Bash", 10),
     "execution-test-writer": ("test-writer", "haiku", "medium", "Read, Grep, Glob, Edit, Write, Bash", 12),
     "execution-documentation-updater": ("documentation-updater", "haiku", "low", "Read, Grep, Glob, Edit, Write", 6),
+    "execution-sonnet-lead": ("sonnet-lead", "sonnet", "high", "Read, Grep, Glob, Edit, Write, Bash", 12),
     "verification-failure-triage": ("failure-triage", "haiku", "medium", "Read, Grep, Glob, Bash", 8),
     "verification-diff-auditor": ("diff-auditor", "haiku", "medium", "Read, Grep, Glob, Bash", 8),
     "verification-test-gap-finder": ("test-gap-finder", "haiku", "low", "Read, Grep, Glob", 7),
@@ -82,7 +83,7 @@ def generate_agents() -> None:
     agent_dir.mkdir(parents=True, exist_ok=True)
     expected: set[str] = set()
     catalog = [
-        "# DreamTeam 0.3 Worker Catalog",
+        "# DreamTeam 0.4 Worker Catalog",
         "",
         "| Agent | Model | Effort | Role |",
         "|---|---|---|---|",
@@ -90,16 +91,21 @@ def generate_agents() -> None:
     for name, values in AGENTS.items():
         worker, model, effort, tools, turns = values
         expected.add(f"{name}.md")
-        (agent_dir / f"{name}.md").write_text(generate_agent(name, worker, model, effort, tools, turns), encoding="utf-8")
+        (agent_dir / f"{name}.md").write_text(
+            generate_agent(name, worker, model, effort, tools, turns),
+            encoding="utf-8",
+        )
         spec = (ROOT / f"workers/{worker}/specification.md").read_text(encoding="utf-8")
         catalog.append(f"| `{name}` | `{model}` | `{effort}` | {use_when(spec)} |")
     for stale in agent_dir.glob("*.md"):
         if stale.name not in expected:
             stale.unlink()
-    catalog.extend([
-        "",
-        "Select the narrowest role. Do not run agents with overlapping question and scope. The executive owns every dispatch and transition.",
-    ])
+    catalog.extend(
+        [
+            "",
+            "Select the narrowest role. Do not run agents with overlapping question and scope. The executive owns every dispatch and transition.",
+        ]
+    )
     REF.mkdir(parents=True, exist_ok=True)
     (REF / "worker-catalog.md").write_text("\n".join(catalog) + "\n", encoding="utf-8")
 
@@ -107,7 +113,9 @@ def generate_agents() -> None:
 def generate_references() -> None:
     REF.mkdir(parents=True, exist_ok=True)
     for output, inputs in REFERENCE_MAPPING.items():
-        content = "\n\n".join((ROOT / item).read_text(encoding="utf-8").rstrip() for item in inputs) + "\n"
+        content = "\n\n".join(
+            (ROOT / item).read_text(encoding="utf-8").rstrip() for item in inputs
+        ) + "\n"
         (REF / output).write_text(content, encoding="utf-8")
 
 
@@ -115,7 +123,9 @@ def main() -> int:
     copy_runtime()
     generate_agents()
     generate_references()
-    print(f"generated {len(AGENTS)} agents, runtime library, and {len(REFERENCE_MAPPING) + 1} references")
+    print(
+        f"generated {len(AGENTS)} agents, runtime library, and {len(REFERENCE_MAPPING) + 1} references"
+    )
     return 0
 
 

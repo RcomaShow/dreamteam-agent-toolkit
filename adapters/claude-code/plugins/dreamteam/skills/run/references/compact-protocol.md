@@ -1,6 +1,6 @@
 # Delegation Contract Protocol — DCP/2
 
-DCP/2 is a compact, line-oriented contract. Use one semantic item per record and omit unused optional records.
+DCP/2 is a compact, line-oriented closed contract. Use one semantic item per record and omit unused optional records.
 
 ```text
 DCP|2
@@ -19,19 +19,17 @@ T|<requested action>
 R|<decision reserved to orchestrator>
 V|<allowed verification>
 B|files=<n>;deep_reads=<n>;turns=<n>;records=<n>;retries=<n>
-O|<required output>
+O|CHP/2
 ```
 
-## Rules
+## Executable rules
 
-- `K` is authoritative and applied without reinterpretation.
-- `R` and `E-` are hard boundaries.
-- `S+` and `E+` are closed; expansion requires handoff.
+- `CONST` must be `DT-C1`; `PROFILE` must be a supported profile.
+- Singleton records may occur exactly once.
+- `B` must contain every supported non-negative budget key and its `records` limit must cover the contract itself.
+- `K`, `R`, `E-`, `S+`, and `E+` are hard boundaries.
 - Missing semantics are not permission to invent them.
-- Budgets are upper bounds, not targets.
-- Stable references use `path`, `Class#method`, or record IDs.
-- Escape `\\`, `\|`, and `\n` as defined in `escaping.md`.
-- Compute a SHA-256 hash of the normalized contract when deterministic tooling is available.
+- Compute the normalized `sha256:` contract hash and register the validated DCP immutably in the run ledger before dispatch.
 
 # Compact Handoff Protocol — CHP/2
 
@@ -41,9 +39,9 @@ Workers return a decision-relevant delta, not a narrative recap.
 CHP|2
 RUN|<run-id>
 TASK|<task-id>
-CONTRACT|<sha256 or UNAVAILABLE>
+CONTRACT|<sha256>
 S|<DONE|PARTIAL|BLOCKED|FAILED>|<short reason>
-E|<id>|FACT|<source>|<claim>
+E|<id>|FACT|<source-anchor>|<claim>
 E|<id>|DEDUCTION|<supporting ids>|<claim>
 E|<id>|ASSUMPTION|<scope>|<claim>
 E|<id>|UNKNOWN|<scope>|<claim>
@@ -54,23 +52,18 @@ W|<id>|<risk>|<evidence>
 N|<ORCHESTRATOR|WORKER:role>|<next action>
 ```
 
-## Precision rules
+## Executable rules
 
-- `FACT` requires direct evidence.
+- Strict mode rejects `CONTRACT|UNAVAILABLE`; `RUN`, `TASK`, and the hash must match a DCP/2 binding already registered in the run ledger.
+- `FACT` requires a current source anchor when anchor validation is enabled.
 - `DEDUCTION` cites existing evidence IDs.
-- `ASSUMPTION` is allowed only when the contract permits it.
-- `UNKNOWN` never silently becomes a fact.
-- `DONE` means the worker contract is complete, not that the whole task is production-ready.
-- `DONE` must not contain unresolved `H` records.
-- `PASS` names the actual check; `NR` means not run.
-- Do not repeat the contract, user request, or previously acknowledged records.
-- Escape fields according to `escaping.md`.
+- `DONE` cannot contain an unresolved `H` record.
+- The writing agent and independent reviewer must have different agent IDs.
+- The SubagentStop hook performs the same runtime validation automatically; `dreamteam_protocol.py` provides explicit preflight and ledger registration.
 
 # DCP/2 and CHP/2 Escaping
 
-Protocols use `|` as a field separator.
-
-Within a field encode:
+Protocols use `|` as a field separator. Within a field encode:
 
 ```text
 \\  -> backslash
@@ -79,4 +72,4 @@ Within a field encode:
 \r  -> carriage return
 ```
 
-Unknown escape sequences are invalid. Records are UTF-8 and one physical line each. Empty trailing fields are preserved. Parsers must reject unsupported versions, duplicate evidence/change/handoff IDs, invalid references, and malformed status records.
+Unknown escape sequences are invalid. Records are UTF-8 and one physical line each. Empty trailing fields are preserved. Parsers reject unsupported versions, duplicate singleton or item IDs, invalid references, invalid budgets, malformed status records, and mismatched contract bindings.

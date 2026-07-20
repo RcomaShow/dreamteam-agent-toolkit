@@ -1,6 +1,6 @@
 # Delegation Contract Protocol — DCP/2
 
-DCP/2 is a compact, line-oriented contract. Use one semantic item per record and omit unused optional records.
+DCP/2 is a compact, line-oriented closed contract. Use one semantic item per record and omit unused optional records.
 
 ```text
 DCP|2
@@ -19,16 +19,14 @@ T|<requested action>
 R|<decision reserved to orchestrator>
 V|<allowed verification>
 B|files=<n>;deep_reads=<n>;turns=<n>;records=<n>;retries=<n>
-O|<required output>
+O|CHP/2
 ```
 
-## Rules
+## Executable rules
 
-- `K` is authoritative and applied without reinterpretation.
-- `R` and `E-` are hard boundaries.
-- `S+` and `E+` are closed; expansion requires handoff.
+- `CONST` must be `DT-C1`; `PROFILE` must be a supported profile.
+- Singleton records may occur exactly once.
+- `B` must contain every supported non-negative budget key and its `records` limit must cover the contract itself.
+- `K`, `R`, `E-`, `S+`, and `E+` are hard boundaries.
 - Missing semantics are not permission to invent them.
-- Budgets are upper bounds, not targets.
-- Stable references use `path`, `Class#method`, or record IDs.
-- Escape `\\`, `\|`, and `\n` as defined in `escaping.md`.
-- Compute a SHA-256 hash of the normalized contract when deterministic tooling is available.
+- Compute the normalized `sha256:` contract hash and register the validated DCP immutably in the run ledger before dispatch.

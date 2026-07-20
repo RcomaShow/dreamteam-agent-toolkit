@@ -1,16 +1,32 @@
-"""Paired benchmark accounting with strict types and fail-closed claims."""
+"""Paired benchmark accounting with strict invariants and recomputed costs."""
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import Enum
-from statistics import mean, median
-from typing import Any, Iterable, Mapping
+from statistics import median
+from typing import Any, Iterable
+
+from .pricing import ExecutionLane, PriceBook, TokenUsage, estimate_cost
 
 
 class Arm(str, Enum):
     DIRECT = "direct"
     DREAMTEAM = "dreamteam"
+
+
+_VALID_CRITICALITIES = {"M0", "L1", "L2", "C3"}
+_VALID_TASK_KINDS = {
+    "discovery", "edit", "implementation", "test", "scaffold",
+    "documentation", "review", "migration",
+}
+_VALID_SIZE_BANDS = {"small", "medium", "large", "xlarge"}
+_VALID_TOPOLOGIES = {"lean", "opus-sonnet", "frontier"}
+_VALID_ROUTES = {
+    "BLOCKED", "MAIN_DIRECT", "HAIKU_DISCOVERY", "HAIKU_EXECUTE",
+    "SONNET_LEAD", "OPUS_DECISION",
+}
+_VALID_CACHE_COHORTS = {"cold", "warm"}
 
 
 @dataclass(frozen=True)
@@ -20,7 +36,35 @@ class ModelUsageRecord:
     input_tokens: int
     output_tokens: int
     cache_read_tokens: int = 0
-    cache_write_tokens: int = 0
+    cache_write_5m_tokens: int = 0
+    cache_write_1h_tokens: int = 0
+    lane: ExecutionLane = ExecutionLane.INTERACTIVE
+
+    def __post_init__(self) -> None:
+        if not self.model or not self.effort:
+            raise ValueError("model and effort are required")
+        for name in (
+            "input_tokens",
+            "output_tokens",
+            "cache_read_tokens",
+            "cache_write_5m_tokens",
+            "cache_write_1h_tokens",
+        ):
+            value = getattr(self, name)
+            if type(value) is not int or value < 0:
+                raise ValueError(f"{name} must be a non-negative integer")
+        if not isinstance(self.lane, ExecutionLane):
+            raise TypeError("lane must be ExecutionLane")
+
+    @property
+    def usage(self) -> TokenUsage:
+        return TokenUsage(
+            input_tokens=self.input_tokens,
+            output_tokens=self.output_tokens,
+            cache_read_tokens=self.cache_read_tokens,
+            cache_write_5m_tokens=self.cache_write_5m_tokens,
+            cache_write_1h_tokens=self.cache_write_1h_tokens,
+        )
 
 
 @dataclass(frozen=True)
@@ -32,8 +76,12 @@ class RunResult:
     arm: Arm
     repo_commit: str
     task_archetype: str
+    criticality: str
+    task_kind: str
+    size_band: str
     topology: str
     route: str
+    agent_role: str
     cache_cohort: str
     arm_order: int
     quality_oracle_id: str
@@ -50,29 +98,113 @@ class RunResult:
     failed_attempts: int
     elapsed_seconds: float
     pricing_catalog_id: str
-    model_usage: tuple[ModelUsageRecord, ...] = ()
+    adapter_version: str
+    config_hash: str
+    environment_id: str
+    timeout_seconds: float
+    model_usage: tuple[ModelUsageRecord, ...]
 
     def __post_init__(self) -> None:
         if not isinstance(self.arm, Arm):
             raise TypeError("arm must be Arm")
-        if not isinstance(self.quality_pass, bool):
+        if type(self.quality_pass) is not bool:
             raise TypeError("quality_pass must be a boolean")
-        for name in ("main_tokens", "worker_tokens", "cache_read_tokens", "cache_write_tokens", "reread_bytes", "retries", "escalations", "failed_attempts", "arm_order"):
+        for name in (
+            "main_tokens",
+            "worker_tokens",
+            "cache_read_tokens",
+            "cache_write_tokens",
+            "reread_bytes",
+            "retries",
+            "escalations",
+            "failed_attempts",
+            "arm_order",
+        ):
             value = getattr(self, name)
-            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            if type(value) is not int or value < 0:
                 raise ValueError(f"{name} must be a non-negative integer")
+        if self.arm_order not in {0, 1}:
+            raise ValueError("arm_order must be 0 or 1")
         for name in ("billed_usd", "api_equivalent_usd"):
             value = getattr(self, name)
-            if not isinstance(value, Decimal) or value < 0:
-                raise ValueError(f"{name} must be a non-negative Decimal")
+            if not isinstance(value, Decimal) or not value.is_finite() or value < 0:
+                raise ValueError(f"{name} must be a finite non-negative Decimal")
+        for name in ("elapsed_seconds", "timeout_seconds"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+                raise ValueError(f"{name} must be a non-negative number")
         required = (
-            "run_id", "pair_id", "task_id", "replicate_id", "repo_commit",
-            "task_archetype", "topology", "route", "cache_cohort",
-            "quality_oracle_id", "pricing_catalog_id",
+            "run_id",
+            "pair_id",
+            "task_id",
+            "replicate_id",
+            "repo_commit",
+            "task_archetype",
+            "criticality",
+            "task_kind",
+            "size_band",
+            "topology",
+            "route",
+            "agent_role",
+            "cache_cohort",
+            "quality_oracle_id",
+            "pricing_catalog_id",
+            "adapter_version",
+            "config_hash",
+            "environment_id",
         )
         for name in required:
             if not getattr(self, name):
                 raise ValueError(f"{name} is required")
+        if self.criticality not in _VALID_CRITICALITIES:
+            raise ValueError("criticality is invalid")
+        if self.task_kind not in _VALID_TASK_KINDS:
+            raise ValueError("task_kind is invalid")
+        if self.size_band not in _VALID_SIZE_BANDS:
+            raise ValueError("size_band is invalid")
+        if self.topology not in _VALID_TOPOLOGIES:
+            raise ValueError("topology is invalid")
+        if self.route not in _VALID_ROUTES:
+            raise ValueError("route is invalid")
+        if self.cache_cohort not in _VALID_CACHE_COHORTS:
+            raise ValueError("cache_cohort is invalid")
+        if not self.model_usage:
+            raise ValueError("model_usage must not be empty")
+        computed = recompute_api_equivalent_usd(self)
+        if computed != self.api_equivalent_usd:
+            raise ValueError(
+                f"api_equivalent_usd mismatch: declared={self.api_equivalent_usd} computed={computed}"
+            )
+        input_output = sum(
+            record.input_tokens + record.output_tokens for record in self.model_usage
+        )
+        if input_output != self.main_tokens + self.worker_tokens:
+            raise ValueError(
+                "main_tokens + worker_tokens must equal model_usage input/output tokens"
+            )
+        cache_reads = sum(record.cache_read_tokens for record in self.model_usage)
+        if cache_reads != self.cache_read_tokens:
+            raise ValueError("cache_read_tokens must equal model_usage cache reads")
+        cache_writes = sum(
+            record.cache_write_5m_tokens + record.cache_write_1h_tokens
+            for record in self.model_usage
+        )
+        if cache_writes != self.cache_write_tokens:
+            raise ValueError("cache_write_tokens must equal model_usage cache writes")
+
+    @property
+    def bucket_key(self) -> tuple[str, ...]:
+        return (
+            self.task_archetype,
+            self.criticality,
+            self.task_kind,
+            self.size_band,
+            self.topology,
+            self.route,
+            self.agent_role,
+            self.cache_cohort,
+            self.adapter_version,
+        )
 
 
 @dataclass(frozen=True)
@@ -82,15 +214,35 @@ class PairResult:
     direct: RunResult
     dreamteam: RunResult
 
+    def __post_init__(self) -> None:
+        equal_fields = (
+            "task_id",
+            "repo_commit",
+            "task_archetype",
+            "criticality",
+            "task_kind",
+            "size_band",
+            "cache_cohort",
+            "quality_oracle_id",
+            "pricing_catalog_id",
+            "adapter_version",
+            "config_hash",
+            "environment_id",
+            "timeout_seconds",
+        )
+        mismatches = [
+            name
+            for name in equal_fields
+            if getattr(self.direct, name) != getattr(self.dreamteam, name)
+        ]
+        if mismatches:
+            raise ValueError(f"pair invariant mismatch: {mismatches}")
+        if self.direct.arm_order == self.dreamteam.arm_order:
+            raise ValueError("paired arms must have distinct arm_order")
+
     @property
     def quality_parity(self) -> bool:
-        return (
-            self.direct.quality_pass
-            and self.dreamteam.quality_pass
-            and self.direct.quality_oracle_id == self.dreamteam.quality_oracle_id
-            and self.direct.repo_commit == self.dreamteam.repo_commit
-            and self.direct.pricing_catalog_id == self.dreamteam.pricing_catalog_id
-        )
+        return self.direct.quality_pass and self.dreamteam.quality_pass
 
     @property
     def api_savings_ratio(self) -> Decimal | None:
@@ -99,6 +251,26 @@ class PairResult:
         return (
             self.direct.api_equivalent_usd - self.dreamteam.api_equivalent_usd
         ) / self.direct.api_equivalent_usd
+
+    @property
+    def bucket_key(self) -> tuple[str, ...]:
+        return self.dreamteam.bucket_key
+
+
+def recompute_api_equivalent_usd(result: RunResult) -> Decimal:
+    book = PriceBook.from_catalog_id(result.pricing_catalog_id)
+    return sum(
+        (
+            estimate_cost(
+                record.model,
+                record.usage,
+                price_book=book,
+                lane=record.lane,
+            ).total_usd
+            for record in result.model_usage
+        ),
+        Decimal("0"),
+    )
 
 
 def load_results(data: Any) -> list[RunResult]:
@@ -111,12 +283,40 @@ def _parse_run(item: Any, index: int) -> RunResult:
     if not isinstance(item, dict):
         raise TypeError(f"result {index} must be an object")
     required = {
-        "run_id", "pair_id", "task_id", "replicate_id", "arm", "repo_commit",
-        "task_archetype", "topology", "route", "cache_cohort", "arm_order",
-        "quality_oracle_id", "quality_pass", "billed_usd", "api_equivalent_usd",
-        "main_tokens", "worker_tokens", "cache_read_tokens", "cache_write_tokens",
-        "reread_bytes", "retries", "escalations", "failed_attempts",
-        "elapsed_seconds", "pricing_catalog_id", "model_usage",
+        "run_id",
+        "pair_id",
+        "task_id",
+        "replicate_id",
+        "arm",
+        "repo_commit",
+        "task_archetype",
+        "criticality",
+        "task_kind",
+        "size_band",
+        "topology",
+        "route",
+        "agent_role",
+        "cache_cohort",
+        "arm_order",
+        "quality_oracle_id",
+        "quality_pass",
+        "billed_usd",
+        "api_equivalent_usd",
+        "main_tokens",
+        "worker_tokens",
+        "cache_read_tokens",
+        "cache_write_tokens",
+        "reread_bytes",
+        "retries",
+        "escalations",
+        "failed_attempts",
+        "elapsed_seconds",
+        "pricing_catalog_id",
+        "adapter_version",
+        "config_hash",
+        "environment_id",
+        "timeout_seconds",
+        "model_usage",
     }
     missing = required - set(item)
     unknown = set(item) - required
@@ -138,8 +338,12 @@ def _parse_run(item: Any, index: int) -> RunResult:
         arm=Arm(_str(item["arm"], "arm")),
         repo_commit=_str(item["repo_commit"], "repo_commit"),
         task_archetype=_str(item["task_archetype"], "task_archetype"),
+        criticality=_str(item["criticality"], "criticality"),
+        task_kind=_str(item["task_kind"], "task_kind"),
+        size_band=_str(item["size_band"], "size_band"),
         topology=_str(item["topology"], "topology"),
         route=_str(item["route"], "route"),
+        agent_role=_str(item["agent_role"], "agent_role"),
         cache_cohort=_str(item["cache_cohort"], "cache_cohort"),
         arm_order=_int(item["arm_order"], "arm_order"),
         quality_oracle_id=_str(item["quality_oracle_id"], "quality_oracle_id"),
@@ -156,6 +360,10 @@ def _parse_run(item: Any, index: int) -> RunResult:
         failed_attempts=_int(item["failed_attempts"], "failed_attempts"),
         elapsed_seconds=_float(item["elapsed_seconds"], "elapsed_seconds"),
         pricing_catalog_id=_str(item["pricing_catalog_id"], "pricing_catalog_id"),
+        adapter_version=_str(item["adapter_version"], "adapter_version"),
+        config_hash=_str(item["config_hash"], "config_hash"),
+        environment_id=_str(item["environment_id"], "environment_id"),
+        timeout_seconds=_float(item["timeout_seconds"], "timeout_seconds"),
         model_usage=model_usage,
     )
 
@@ -163,7 +371,16 @@ def _parse_run(item: Any, index: int) -> RunResult:
 def _parse_model_usage(item: Any, index: int) -> ModelUsageRecord:
     if not isinstance(item, dict):
         raise TypeError(f"result {index}: model usage must be an object")
-    allowed = {"model", "effort", "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens"}
+    allowed = {
+        "model",
+        "effort",
+        "input_tokens",
+        "output_tokens",
+        "cache_read_tokens",
+        "cache_write_5m_tokens",
+        "cache_write_1h_tokens",
+        "lane",
+    }
     if set(item) != allowed:
         raise ValueError(f"result {index}: invalid model usage fields")
     return ModelUsageRecord(
@@ -172,13 +389,19 @@ def _parse_model_usage(item: Any, index: int) -> ModelUsageRecord:
         input_tokens=_int(item["input_tokens"], "input_tokens"),
         output_tokens=_int(item["output_tokens"], "output_tokens"),
         cache_read_tokens=_int(item["cache_read_tokens"], "cache_read_tokens"),
-        cache_write_tokens=_int(item["cache_write_tokens"], "cache_write_tokens"),
+        cache_write_5m_tokens=_int(item["cache_write_5m_tokens"], "cache_write_5m_tokens"),
+        cache_write_1h_tokens=_int(item["cache_write_1h_tokens"], "cache_write_1h_tokens"),
+        lane=ExecutionLane(_str(item["lane"], "lane")),
     )
 
 
 def pair_results(results: Iterable[RunResult]) -> list[PairResult]:
     grouped: dict[tuple[str, str], dict[Arm, RunResult]] = {}
+    run_ids: set[str] = set()
     for result in results:
+        if result.run_id in run_ids:
+            raise ValueError(f"duplicate run_id: {result.run_id}")
+        run_ids.add(result.run_id)
         key = (result.pair_id, result.replicate_id)
         arms = grouped.setdefault(key, {})
         if result.arm in arms:
@@ -192,50 +415,111 @@ def pair_results(results: Iterable[RunResult]) -> list[PairResult]:
     return pairs
 
 
+def _distribution(values: list[Decimal]) -> tuple[Decimal, Decimal, Decimal]:
+    ordered = sorted(values)
+    if not ordered:
+        return Decimal("0"), Decimal("0"), Decimal("0")
+    med = median(ordered)
+    mean = sum(ordered, Decimal("0")) / Decimal(len(ordered))
+    p10 = ordered[max(0, (len(ordered) - 1) // 10)]
+    return med, mean, p10
+
+
 def summarize(
     pairs: Iterable[PairResult],
     *,
     minimum_savings_margin: Decimal = Decimal("0.30"),
     minimum_samples: int = 20,
 ) -> dict[str, object]:
+    if (
+        not isinstance(minimum_savings_margin, Decimal)
+        or not minimum_savings_margin.is_finite()
+        or not Decimal("0") <= minimum_savings_margin <= Decimal("1")
+    ):
+        raise ValueError("minimum_savings_margin must be a finite Decimal between 0 and 1")
+    if type(minimum_samples) is not int or minimum_samples < 1:
+        raise ValueError("minimum_samples must be a positive integer")
     items = list(pairs)
     parity = [item for item in items if item.quality_parity]
     economic = [(item, item.api_savings_ratio) for item in parity if item.api_savings_ratio is not None]
     savings = [value for _, value in economic if value is not None]
-    ordered = sorted(savings)
-    median_savings = Decimal("0") if not ordered else median(ordered)
-    mean_savings = Decimal("0") if not ordered else sum(ordered, Decimal("0")) / Decimal(len(ordered))
-    p10 = Decimal("0") if not ordered else ordered[max(0, (len(ordered) - 1) // 10)]
+    median_savings, mean_savings, p10 = _distribution(savings)
     quality_allowed = bool(items) and len(parity) == len(items)
-    positive = quality_allowed and bool(ordered) and median_savings > 0
+    positive = quality_allowed and bool(savings) and median_savings > 0
     margin = positive and median_savings >= minimum_savings_margin
-    publication = margin and len(ordered) >= minimum_samples and p10 > 0
+
+    buckets: dict[tuple[str, ...], list[Decimal]] = {}
+    for pair, value in economic:
+        if value is not None:
+            buckets.setdefault(pair.bucket_key, []).append(value)
+    bucket_results: dict[str, dict[str, object]] = {}
+    buckets_publishable = bool(buckets)
+    for key, values in sorted(buckets.items()):
+        b_median, b_mean, b_p10 = _distribution(values)
+        publishable = (
+            len(values) >= minimum_samples
+            and b_median >= minimum_savings_margin
+            and b_p10 > 0
+        )
+        buckets_publishable = buckets_publishable and publishable
+        bucket_results["|".join(key)] = {
+            "samples": len(values),
+            "median_api_savings_ratio": float(b_median),
+            "mean_api_savings_ratio": float(b_mean),
+            "p10_api_savings_ratio": float(b_p10),
+            "publication_claim_allowed": publishable,
+        }
+
+    publication = margin and buckets_publishable
+    quality_failures = len(items) - len(parity)
+    dreamteam_success_cost = sum(
+        (pair.dreamteam.api_equivalent_usd for pair in parity), Decimal("0")
+    )
+    cost_per_success = (
+        None
+        if not parity
+        else float(dreamteam_success_cost / Decimal(len(parity)))
+    )
+    mean_direct_elapsed = (
+        0.0
+        if not items
+        else sum(pair.direct.elapsed_seconds for pair in items) / len(items)
+    )
+    mean_dreamteam_elapsed = (
+        0.0
+        if not items
+        else sum(pair.dreamteam.elapsed_seconds for pair in items) / len(items)
+    )
     reasons: list[str] = []
     if not quality_allowed:
         reasons.append("quality parity is not complete")
-    if not ordered:
+    if not savings:
         reasons.append("no pair has a positive direct cost")
     elif median_savings <= 0:
         reasons.append("median savings is not positive")
     elif median_savings < minimum_savings_margin:
         reasons.append("median savings does not clear the configured margin")
-    if len(ordered) < minimum_samples:
-        reasons.append("minimum sample count not reached")
-    if ordered and p10 <= 0:
-        reasons.append("lower-tail savings is not positive")
+    if not buckets_publishable:
+        reasons.append("one or more benchmark buckets fail sample, margin, or lower-tail gates")
     return {
         "pairs": len(items),
-        "valid_economic_pairs": len(ordered),
+        "valid_economic_pairs": len(savings),
         "quality_parity_pairs": len(parity),
         "quality_parity_rate": 0.0 if not items else len(parity) / len(items),
         "median_api_savings_ratio": float(median_savings),
         "p10_api_savings_ratio": float(p10),
         "mean_api_savings_ratio": float(mean_savings),
-        "negative_roi_pairs": sum(1 for value in ordered if value < 0),
+        "negative_roi_pairs": sum(1 for value in savings if value < 0),
+        "quality_failure_pairs": quality_failures,
+        "quality_failure_rate": 0.0 if not items else quality_failures / len(items),
+        "dreamteam_api_cost_per_quality_pair": cost_per_success,
+        "mean_direct_elapsed_seconds": mean_direct_elapsed,
+        "mean_dreamteam_elapsed_seconds": mean_dreamteam_elapsed,
         "quality_claim_allowed": quality_allowed,
         "positive_cost_claim_allowed": positive,
         "margin_claim_allowed": margin,
         "publication_claim_allowed": publication,
+        "buckets": bucket_results,
         "reasons": reasons,
     }
 
@@ -260,13 +544,19 @@ def _int(value: Any, name: str) -> int:
 def _float(value: Any, name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
         raise TypeError(f"{name} must be a non-negative number")
-    return float(value)
+    result = float(value)
+    if result == float("inf") or result != result:
+        raise ValueError(f"{name} must be finite")
+    return result
 
 
 def _decimal(value: Any, name: str) -> Decimal:
     if isinstance(value, bool) or not isinstance(value, (int, float, str)):
         raise TypeError(f"{name} must be numeric")
-    result = Decimal(str(value))
-    if result < 0:
-        raise ValueError(f"{name} must be non-negative")
+    try:
+        result = Decimal(str(value))
+    except InvalidOperation as exc:
+        raise ValueError(f"{name} must be numeric") from exc
+    if not result.is_finite() or result < 0:
+        raise ValueError(f"{name} must be finite and non-negative")
     return result

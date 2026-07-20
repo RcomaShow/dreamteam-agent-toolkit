@@ -43,13 +43,15 @@ class HookTests(unittest.TestCase):
         self.assertEqual(result["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_post_read_stores_metadata_not_content(self):
-        data = {"cwd": str(self.root), "hook_event_name": "PostToolUse", "tool_name": "Read", "tool_input": {"file_path": str(self.root / "a.py"), "offset": 1, "limit": 2}, "session_id": "s", "agent_id": "worker"}
+        data = {"cwd": str(self.root), "hook_event_name": "PreToolUse", "tool_name": "Read", "tool_use_id": "read-1", "tool_input": {"file_path": str(self.root / "a.py"), "offset": 1, "limit": 2}, "session_id": "s", "agent_id": "worker"}
+        self.assertIsNone(self.hook.handle(data, "pre", self.env))
+        data["hook_event_name"] = "PostToolUse"
         self.assertIsNone(self.hook.handle(data, "post", self.env))
         db = (self.data / "ledger.sqlite").read_bytes()
         self.assertNotIn(b"a\na\n", db)
 
     def test_agent_budget_requires_explicit_reservation(self):
-        result = self.hook.handle({"cwd": str(self.root), "hook_event_name": "PreToolUse", "tool_name": "Agent", "tool_input": {"description": "worker"}, "session_id": "s"}, "pre", self.env)
+        result = self.hook.handle({"cwd": str(self.root), "hook_event_name": "PreToolUse", "tool_name": "Agent", "tool_use_id": "agent-missing-budget", "tool_input": {"description": "worker"}, "session_id": "s"}, "pre", self.env)
         self.assertEqual(result["hookSpecificOutput"]["permissionDecision"], "deny")
 
 

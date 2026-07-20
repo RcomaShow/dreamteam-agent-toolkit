@@ -1,21 +1,16 @@
-# Routing Policy 0.2
+# Routing Policy 0.4
 
-1. Classify code as M0, L1, L2, or C3.
-2. Apply hard gates before considering delegation.
-3. Select one of MAIN_DIRECT, WORKER_READ, WORKER_WRITE, HYBRID_EDIT, or HIGH_CAPABILITY_WORKER.
-4. Use the shortest sufficient worker chain.
-5. Declare a compact route packet before work begins.
+1. Classify work as M0, L1, L2, or C3.
+2. Select Lean, Opus-Sonnet, or Frontier explicitly.
+3. Apply security, hook, calibration, reread, verification, and hard-budget gates before economics.
+4. Forecast every active model stage, retry, escalation, cache operation, and independent reviewer.
+5. Select one of `BLOCKED`, `MAIN_DIRECT`, `HAIKU_DISCOVERY`, `HAIKU_EXECUTE`, `SONNET_LEAD`, or `OPUS_DECISION` and return a concrete role and ordered execution chain.
+6. Register a normalized DCP/2 before Agent dispatch and accept only a bound CHP/2.
 
-## Hard gates for direct orchestrator ownership
+## Direct or blocked gates
 
-- architecture or business semantics are undecided;
-- public contracts, security, transaction, concurrency, idempotency, distributed consistency, database migration, or destructive behavior are involved;
-- the task is localized and delegation overhead is comparable to implementation;
-- the orchestrator must inspect almost all material anyway;
-- acceptance criteria or a closed contract are missing.
+Keep work direct, or block it when the hard budget cannot support direct execution, if context is already hot, source volume is small, calibration is insufficient, escalation/reread policy is exceeded, or the candidate omits a required stage. C3 decisions remain executive-owned; higher-tier C3 routes are quality routes rather than automatic savings claims.
 
 ## Delegation gates
 
-Delegate read work when context volume is high and decision density is low. Delegate write work only when behavior, scope, editable symbols, reserved decisions, and verification are explicit.
-
-Do not run overlapping workers on the same question. No worker delegates to another worker. The orchestrator owns every transition.
+Delegate only when the whole candidate tree clears the configured margin. Writes require a distinct non-zero-cost Sonnet reviewer. `opus-sonnet` forbids hidden Haiku work; `frontier` requires explicit Opus, Sonnet, and Haiku forecasts. Workers never dispatch other workers, and parallel work must be independent and fit the atomic active-worker cap.

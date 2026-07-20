@@ -3,12 +3,13 @@
   "owner": {
     "name": "RcomaShow"
   },
-  "description": "DreamTeam adapters for cost-proof Lean and Frontier orchestration with bounded workers and independent verification.",
+  "description": "DreamTeam adapters for fail-closed Lean, Opus-Sonnet, and Frontier orchestration with bounded workers and independent verification.",
   "plugins": [
     {
       "name": "dreamteam",
       "source": "./adapters/claude-code/plugins/dreamteam",
-      "description": "Tiered Claude Code orchestration with conservative USD routing, compact evidence, and quality-parity measurement."
+      "description": "Claude Code orchestration with executable profiles, conservative USD routing, compact evidence, and quality-parity measurement.",
+      "defaultEnabled": false
     }
   ]
 }

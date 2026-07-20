@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|Grep|Glob|Bash|Agent",
+        "matcher": "Read|Grep|Glob|Edit|Write|Bash|Agent",
         "hooks": [
           {
             "type": "command",
@@ -14,7 +14,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Read|Grep|Glob|Bash|Agent",
+        "matcher": "Read|Grep|Glob|Edit|Write|Bash|Agent",
         "hooks": [
           {
             "type": "command",
@@ -26,7 +26,7 @@
     ],
     "PostToolUseFailure": [
       {
-        "matcher": "Read|Grep|Glob|Bash|Agent",
+        "matcher": "Read|Grep|Glob|Edit|Write|Bash|Agent",
         "hooks": [
           {
             "type": "command",
