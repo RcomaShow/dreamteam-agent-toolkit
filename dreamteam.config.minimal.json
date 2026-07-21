@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "constitution": "DT-C1",
+  "topology": "lean",
+  "profile": "balanced",
+  "pricingAsOf": "2026-07-17",
+  "models": {
+    "executive": "inherit",
+    "lead": "sonnet",
+    "workers": "haiku"
+  },
+  "routing": {
+    "maxEscalationProbability": 0.25,
+    "maxMainRereadRatio": 0.35,
+    "minSamplesForEnforcement": 20,
+    "allowClosedContextBatch": false
+  },
+  "budgets": {
+    "maxRunUsd": 1.0
+  },
+  "verification": {
+    "requireIndependentWriterReview": true,
+    "requireAnchorValidation": true,
+    "allowFullSuite": "orchestrator-only"
+  },
+  "telemetry": {
+    "enabled": false,
+    "storeSourceContent": false,
+    "ledger": "off",
+    "enforcement": "advisory"
+  }
+}

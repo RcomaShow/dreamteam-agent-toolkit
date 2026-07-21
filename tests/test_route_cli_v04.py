@@ -37,6 +37,11 @@ class RouteCliV04Tests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.parse_request(data)
 
+    def test_trusted_route_wrapper_exposes_only_read_only_operations(self):
+        module = load_route()
+        self.assertEqual(module._OPERATION_COMMANDS, {"doctor", "status"})
+        self.assertNotIn("init", module._OPERATION_COMMANDS)
+
 
 if __name__ == "__main__":
     unittest.main()

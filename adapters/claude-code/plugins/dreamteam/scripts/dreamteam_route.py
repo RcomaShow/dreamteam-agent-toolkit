@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Route a JSON request using the bundled DreamTeam runtime."""
+"""Route requests and expose deterministic DreamTeam project operations."""
 from __future__ import annotations
 
 import argparse
@@ -8,14 +8,17 @@ from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Sequence
 
 PLUGIN = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN / "lib"))
 
 from dreamteam.config import RuntimeCapabilities, RuntimeConfig
+from dreamteam.operations import main as operations_main
 from dreamteam.pricing import TokenUsage
 from dreamteam.routing import Criticality, RouteRequest, TaskKind, choose_route
+
+_OPERATION_COMMANDS = {"doctor", "status"}
 
 
 def _object(value: Any, name: str) -> dict[str, object]:
@@ -82,7 +85,10 @@ def parse_request(data: dict[str, object]) -> RouteRequest:
         raise ValueError(f"request has unknown fields: {sorted(unknown)}")
     requested_role = data.get("requested_role")
     requested_worker_role = data.get("requested_worker_role")
-    for name, value in (("requested_role", requested_role), ("requested_worker_role", requested_worker_role)):
+    for name, value in (
+        ("requested_role", requested_role),
+        ("requested_worker_role", requested_worker_role),
+    ):
         if value is not None and (not isinstance(value, str) or not value):
             raise TypeError(f"{name} must be a non-empty string")
     return RouteRequest(
@@ -112,15 +118,17 @@ def parse_request(data: dict[str, object]) -> RouteRequest:
     )
 
 
-def main() -> int:
+def route_main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--batch-executor-available", action="store_true")
     parser.add_argument("--hooks-available", action="store_true")
     parser.add_argument("--resume-available", action="store_true")
-    parser.add_argument("--shadow", action="store_true", help="do not enforce minimum calibration samples")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--shadow", action="store_true", help="do not enforce minimum calibration samples"
+    )
+    args = parser.parse_args(argv)
     data = json.loads(args.request.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise TypeError("request must be a JSON object")
@@ -148,6 +156,13 @@ def main() -> int:
     payload.pop("candidate_forecast", None)
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] in _OPERATION_COMMANDS:
+        return operations_main(arguments)
+    return route_main(arguments)
 
 
 if __name__ == "__main__":

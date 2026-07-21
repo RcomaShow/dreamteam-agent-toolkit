@@ -2,6 +2,35 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.1] - 2026-07-21
+
+### Added
+
+- Deterministic `init`, `doctor`, and metadata-only `status` project operations.
+- Atomic minimal-config generation with overwrite and symlink safeguards.
+- Actionable text and JSON diagnostics with stable issue codes and remediation guidance.
+- Read-only SQLite status summaries for charges, reservations, checkpoints, tool failures, and invalidation categories.
+- Standard Python packaging, typed-package marker, console entry point, Makefile, and a validator-checked minimal configuration.
+- Five-minute onboarding documentation and an implementation-plan decision record.
+
+### Changed
+
+- Clarified that Opus-Sonnet already uses a bounded Sonnet implementer and a distinct independent reviewer identity.
+- Extended plugin artifact smoke tests to exercise init, doctor, and status.
+- Updated runtime, plugin, validation, release documentation, and artifacts to 0.4.1.
+
+### Compatibility
+
+- Config version 2, route identifiers, DCP/2, CHP/2, agent identifiers, and benchmark bucket fields are unchanged.
+- Strict mode remains opt-in; the recommended first-run configuration remains advisory with telemetry disabled.
+- The runtime still has zero third-party dependencies.
+
+### Claim policy
+
+- No universal savings claim is made.
+- Billed USD and recomputed API-equivalent USD remain separate.
+- Publication claims still require complete quality parity and sample, margin, and positive lower-tail gates in every reported bucket.
+
 ## [0.4.0] - 2026-07-17
 
 ### Added
@@ -32,12 +61,6 @@ All notable changes follow semantic versioning.
 - The plugin installs disabled by default and requires explicit enablement after configuration review.
 - Release builds refuse dirty trees, untracked files, and symlinks.
 - GitHub Actions dependencies are pinned to immutable commit SHAs with read-only repository permissions.
-
-### Claim policy
-
-- No universal savings claim is made.
-- Billed USD and recomputed API-equivalent USD remain separate.
-- Publication claims require complete quality parity and sample, margin, and positive lower-tail gates in every reported bucket.
 
 ## [0.3.0] - 2026-07-17
 

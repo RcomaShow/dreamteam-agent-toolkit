@@ -29,7 +29,9 @@ jobs:
         run: python scripts/measure.py
       - name: Compile runtime
         run: python -m compileall dreamteam adapters/claude-code/plugins/dreamteam
+      - name: Package metadata smoke
+        run: python -c "import tomllib; from pathlib import Path; data=tomllib.loads(Path('pyproject.toml').read_text()); assert data['project']['version'] == '0.4.1'; assert data['project']['dependencies'] == []"
       - name: Build release archives
         run: python scripts/build_release.py
       - name: Smoke-test plugin artifact
-        run: python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.0.zip
+        run: python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.1.zip

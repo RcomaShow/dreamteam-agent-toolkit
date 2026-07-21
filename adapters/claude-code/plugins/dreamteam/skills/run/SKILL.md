@@ -1,23 +1,23 @@
 ---
 name: run
-description: Route an engineering task through DreamTeam 0.4 Lean, Opus-Sonnet, or Frontier topology using strict runtime gates and explicit quality ownership.
+description: Route an engineering task through DreamTeam 0.4.1 Lean, Opus-Sonnet, or Frontier topology using strict runtime gates and explicit quality ownership.
 argument-hint: "topology=<lean|opus-sonnet|frontier> profile=<economy|balanced|offload|quality> <task>"
 disable-model-invocation: true
 ---
 
-# DreamTeam Run 0.4
+# DreamTeam Run 0.4.1
 
 Task: `$ARGUMENTS`
 
 You are the executive orchestrator and final owner.
 
-1. Read `${CLAUDE_SKILL_DIR}/references/constitution-kernel.md` and load the project-root `dreamteam.config.json`.
+1. Read `${CLAUDE_SKILL_DIR}/references/constitution-kernel.md` and load the project-root `dreamteam.config.json`. If it is missing, stop and direct the user to `/dreamteam:init`.
 2. Classify the work as M0, L1, L2, or C3 and select a typed task kind.
 3. Build the smallest deterministic repository capsule before broad model reads.
 4. Produce explicit token forecasts for direct Sonnet, Haiku worker, Sonnet lead/reviewer, and Opus executive where the topology requires them.
 5. Call `${CLAUDE_PLUGIN_ROOT}/scripts/dreamteam_route.py`; never decide the final gate only in prose.
 6. Stop immediately on `BLOCKED`. Delegate only when calibration, reread, budget, escalation, strict-hook, verification, and USD gates pass.
-7. `opus-sonnet` is an explicit Opus executive → `execution-sonnet-lead` path and must contain no hidden Haiku usage.
+7. `opus-sonnet` is an explicit Opus executive → `execution-sonnet-lead` bounded implementation path. Authored changes must go to `verification-independent-reviewer`, a different Sonnet agent identity. The topology contains no hidden Haiku usage.
 8. `frontier` is Opus → Sonnet → Haiku and must account for every active stage.
 9. Batch requires config opt-in, a real Batch executor, closed context, and retention confirmation.
 10. Keep physical dispatch flat. Workers never spawn workers; the executive owns the DAG and every transition.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate DreamTeam 0.4 repository, generated adapter, and security invariants."""
+"""Validate DreamTeam 0.4.1 repository, generated adapter, and security invariants."""
 from __future__ import annotations
 
 import importlib
@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import sys
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -18,6 +19,7 @@ ALLOWED_AGENT_FIELDS = {
 }
 FORBIDDEN_AGENT_FIELDS = {"hooks", "mcpServers", "permissionMode"}
 ALLOWED_EFFORT = {"low", "medium", "high", "xhigh", "max"}
+EXPECTED_VERSION = "0.4.1"
 
 
 def frontmatter(path: Path) -> dict[str, str]:
@@ -43,8 +45,14 @@ def main() -> int:
     warnings: list[str] = []
     required = [
         ROOT / ".claude-plugin/marketplace.json",
+        ROOT / "pyproject.toml",
+        ROOT / "Makefile",
+        ROOT / "dreamteam.config.minimal.json",
+        ROOT / "docs/v0.4-implementation-plan.md",
+        ROOT / "docs/v0.4.1-implementation-plan.md",
         PLUGIN / ".claude-plugin/plugin.json",
         PLUGIN / "hooks/hooks.json",
+        PLUGIN / "scripts/dreamteam_init.py",
         PLUGIN / "scripts/dreamteam_route.py",
         PLUGIN / "scripts/dreamteam_measure.py",
         PLUGIN / "scripts/dreamteam_anchor.py",
@@ -53,6 +61,11 @@ def main() -> int:
         PLUGIN / "lib/dreamteam/config.py",
         PLUGIN / "lib/dreamteam/routing.py",
         PLUGIN / "lib/dreamteam/protocol.py",
+        PLUGIN / "lib/dreamteam/operations.py",
+        PLUGIN / "lib/dreamteam/py.typed",
+        PLUGIN / "skills/init/SKILL.md",
+        PLUGIN / "skills/doctor/SKILL.md",
+        PLUGIN / "skills/status/SKILL.md",
         PLUGIN / "skills/run/SKILL.md",
         PLUGIN / "skills/review/SKILL.md",
         ROOT / "core/schemas/dreamteam-config.schema.json",
@@ -62,9 +75,10 @@ def main() -> int:
         ROOT / "dreamteam/ledger.py",
         ROOT / "dreamteam/anchors.py",
         ROOT / "dreamteam/benchmark.py",
+        ROOT / "dreamteam/operations.py",
+        ROOT / "dreamteam/py.typed",
         ROOT / "scripts/measure.py",
         ROOT / "scripts/smoke_plugin_artifact.py",
-        ROOT / "docs/v0.4-implementation-plan.md",
     ]
     for path in required:
         if not path.exists():
@@ -81,9 +95,11 @@ def main() -> int:
             errors.append(f"temporary release file must not ship: {temporary}")
 
     try:
-        manifest = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
-        if manifest.get("version") != "0.4.0":
-            errors.append("plugin version must be 0.4.0")
+        manifest = json.loads(
+            (PLUGIN / ".claude-plugin/plugin.json").read_text(encoding="utf-8")
+        )
+        if manifest.get("version") != EXPECTED_VERSION:
+            errors.append(f"plugin version must be {EXPECTED_VERSION}")
         if manifest.get("defaultEnabled") is not False:
             errors.append("plugin must require explicit enablement")
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", manifest["name"]):
@@ -92,19 +108,47 @@ def main() -> int:
         errors.append(f"plugin.json: {exc}")
 
     try:
-        config = json.loads((ROOT / "dreamteam.config.example.json").read_text(encoding="utf-8"))
+        metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        project = metadata["project"]
+        if project.get("version") != EXPECTED_VERSION:
+            errors.append(f"pyproject version must be {EXPECTED_VERSION}")
+        if project.get("dependencies") != []:
+            errors.append("runtime dependencies must remain empty")
+        if project.get("requires-python") != ">=3.11":
+            errors.append("requires-python must remain >=3.11")
+    except Exception as exc:
+        errors.append(f"pyproject.toml: {exc}")
+
+    try:
+        config = json.loads(
+            (ROOT / "dreamteam.config.example.json").read_text(encoding="utf-8")
+        )
+        minimal = json.loads(
+            (ROOT / "dreamteam.config.minimal.json").read_text(encoding="utf-8")
+        )
+        from dreamteam import __version__
         from dreamteam.config import RuntimeConfig, Topology
+        from dreamteam.operations import minimal_config
+
         parsed = RuntimeConfig.from_mapping(config)
+        RuntimeConfig.from_mapping(minimal)
+        if __version__ != EXPECTED_VERSION:
+            errors.append(f"runtime version must be {EXPECTED_VERSION}")
+        if minimal != minimal_config():
+            errors.append("dreamteam.config.minimal.json drifted from minimal_config()")
         if Topology.OPUS_SONNET.value != "opus-sonnet":
             errors.append("opus-sonnet topology is unavailable")
         if parsed.telemetry.enforcement == "strict" and not parsed.telemetry.enabled:
             errors.append("strict example config is not enabled")
     except Exception as exc:
-        errors.append(f"dreamteam.config.example.json: {exc}")
+        errors.append(f"configuration validation: {exc}")
 
     try:
         hooks = json.loads((PLUGIN / "hooks/hooks.json").read_text(encoding="utf-8"))["hooks"]
-        for event in ("PreToolUse", "PostToolUse", "PostToolUseFailure", "SubagentStart", "SubagentStop"):
+        for event in (
+            "PreToolUse", "PostToolUse", "PostToolUseFailure",
+            "SubagentStart", "SubagentStop",
+        ):
             if event not in hooks:
                 errors.append(f"missing hook event: {event}")
         pre = json.dumps(hooks.get("PreToolUse", []))
@@ -152,6 +196,8 @@ def main() -> int:
         errors.append(f"expected 16 agents, found {len(names)}")
     if "execution-sonnet-lead" not in names:
         errors.append("missing execution-sonnet-lead")
+    if "verification-independent-reviewer" not in names:
+        errors.append("missing verification-independent-reviewer")
 
     try:
         hook_path = PLUGIN / "scripts/dreamteam_ledger_hook.py"
@@ -165,13 +211,15 @@ def main() -> int:
         for script_name in hook_module.TRUSTED_PLUGIN_SCRIPTS:
             if not (PLUGIN / "scripts" / script_name).is_file():
                 errors.append(f"trusted plugin wrapper is missing: {script_name}")
+        if "dreamteam_init.py" in hook_module.TRUSTED_PLUGIN_SCRIPTS:
+            errors.append("mutating dreamteam_init.py must not bypass strict Bash authorization")
     except Exception as exc:
         errors.append(f"hook registry validation failed: {exc}")
 
     for module in (
         "dreamteam.pricing", "dreamteam.config", "dreamteam.routing",
         "dreamteam.anchors", "dreamteam.ledger", "dreamteam.protocol",
-        "dreamteam.benchmark",
+        "dreamteam.benchmark", "dreamteam.operations",
     ):
         try:
             importlib.import_module(module)
@@ -182,10 +230,14 @@ def main() -> int:
         generated = PLUGIN / "lib/dreamteam" / source.name
         if not generated.exists() or generated.read_bytes() != source.read_bytes():
             errors.append(f"plugin runtime drift: {source.name}")
+    typed_source = ROOT / "dreamteam/py.typed"
+    typed_generated = PLUGIN / "lib/dreamteam/py.typed"
+    if not typed_generated.exists() or typed_generated.read_bytes() != typed_source.read_bytes():
+        errors.append("plugin runtime drift: py.typed")
 
     for skill in (PLUGIN / "skills").glob("*/SKILL.md"):
         text = skill.read_text(encoding="utf-8")
-        if "DreamTeam" in text and ("0.2" in text or "0.3" in text):
+        if "DreamTeam" in text and any(version in text for version in ("0.2", "0.3", "0.4\n")):
             errors.append(f"stale skill version: {skill.relative_to(ROOT)}")
     profiles = (PLUGIN / "skills/run/references/profiles.md").read_text(encoding="utf-8")
     if "Profile 0.4" not in profiles:
@@ -193,6 +245,15 @@ def main() -> int:
     routing = (PLUGIN / "skills/run/references/routing-policy.md").read_text(encoding="utf-8")
     if "Opus-Sonnet" not in routing:
         errors.append("generated routing reference lacks Opus-Sonnet")
+    catalog = (PLUGIN / "skills/run/references/worker-catalog.md").read_text(encoding="utf-8")
+    if not catalog.startswith("# DreamTeam 0.4.1 Worker Catalog\n"):
+        errors.append("generated worker catalog version is stale")
+
+    route_wrapper = (PLUGIN / "scripts/dreamteam_route.py").read_text(encoding="utf-8")
+    if '"doctor", "status"' not in route_wrapper:
+        errors.append("route wrapper does not expose read-only doctor/status operations")
+    if '"init"' in route_wrapper.split("_OPERATION_COMMANDS", 1)[1].split("\n", 1)[0]:
+        errors.append("route wrapper must not expose mutating init through the trusted wrapper")
 
     for template in (ROOT / "core/templates").glob("*.txt"):
         content = template.read_text(encoding="utf-8")
