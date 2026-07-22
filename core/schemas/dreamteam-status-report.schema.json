@@ -1,0 +1,104 @@
+{
+  "$id": "https://github.com/RcomaShow/dreamteam-agent-toolkit/schemas/dreamteam-status-report-v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "active_workers": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "charged_usd_micros": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "checkpoint_counts": {
+      "additionalProperties": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "type": "object"
+    },
+    "config_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "failed_tool_events": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "fix": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invalidation_categories": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ledger_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "project_root": {
+      "type": "string"
+    },
+    "reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reserved_usd_micros": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "toolkit_version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "toolkit_version",
+    "available",
+    "project_root",
+    "ledger_path",
+    "run_id",
+    "config_hash",
+    "charged_usd_micros",
+    "reserved_usd_micros",
+    "active_workers",
+    "checkpoint_counts",
+    "failed_tool_events",
+    "invalidation_categories",
+    "reason_code",
+    "message",
+    "fix"
+  ],
+  "title": "DreamTeam Status Report v1",
+  "type": "object"
+}

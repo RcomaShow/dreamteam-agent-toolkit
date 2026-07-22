@@ -1,4 +1,4 @@
-# DreamTeam Claude Code Plugin 0.4.4
+# DreamTeam Claude Code Plugin 0.4.5
 
 The plugin installs disabled by default because it contributes enforcement hooks. Enable it explicitly after reviewing the project configuration.
 

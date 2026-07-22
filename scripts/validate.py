@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate DreamTeam 0.4.4 repository, generated adapter, and security invariants."""
+"""Validate DreamTeam 0.4.5 repository, generated adapter, and security invariants."""
 from __future__ import annotations
 
 import importlib
@@ -19,7 +19,7 @@ ALLOWED_AGENT_FIELDS = {
 }
 FORBIDDEN_AGENT_FIELDS = {"hooks", "mcpServers", "permissionMode"}
 ALLOWED_EFFORT = {"low", "medium", "high", "xhigh", "max"}
-EXPECTED_VERSION = "0.4.4"
+EXPECTED_VERSION = "0.4.5"
 
 
 def frontmatter(path: Path) -> dict[str, str]:
@@ -51,6 +51,7 @@ def main() -> int:
         ROOT / "docs/v0.4-implementation-plan.md",
         ROOT / "docs/v0.4.1-implementation-plan.md",
         ROOT / "docs/v0.4-stabilization-plan.md",
+        ROOT / "docs/v0.4.5-stability-candidate.md",
         PLUGIN / ".claude-plugin/plugin.json",
         PLUGIN / "hooks/hooks.json",
         PLUGIN / "scripts/dreamteam_init.py",
@@ -70,6 +71,8 @@ def main() -> int:
         PLUGIN / "skills/run/SKILL.md",
         PLUGIN / "skills/review/SKILL.md",
         ROOT / "core/schemas/dreamteam-config.schema.json",
+        ROOT / "core/schemas/dreamteam-doctor-report.schema.json",
+        ROOT / "core/schemas/dreamteam-status-report.schema.json",
         ROOT / "dreamteam/config.py",
         ROOT / "dreamteam/routing.py",
         ROOT / "dreamteam/protocol.py",
@@ -143,6 +146,19 @@ def main() -> int:
             errors.append("strict example config is not enabled")
     except Exception as exc:
         errors.append(f"configuration validation: {exc}")
+
+    for schema_name in (
+        "dreamteam-doctor-report.schema.json",
+        "dreamteam-status-report.schema.json",
+    ):
+        try:
+            schema = json.loads((ROOT / "core/schemas" / schema_name).read_text(encoding="utf-8"))
+            if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+                errors.append(f"{schema_name}: unsupported JSON Schema draft")
+            if schema.get("additionalProperties") is not False:
+                errors.append(f"{schema_name}: root additionalProperties must be false")
+        except Exception as exc:
+            errors.append(f"{schema_name}: {exc}")
 
     try:
         hooks = json.loads((PLUGIN / "hooks/hooks.json").read_text(encoding="utf-8"))["hooks"]
@@ -247,7 +263,7 @@ def main() -> int:
     if "Opus-Sonnet" not in routing:
         errors.append("generated routing reference lacks Opus-Sonnet")
     catalog = (PLUGIN / "skills/run/references/worker-catalog.md").read_text(encoding="utf-8")
-    if not catalog.startswith("# DreamTeam 0.4.4 Worker Catalog\n"):
+    if not catalog.startswith("# DreamTeam 0.4.5 Worker Catalog\n"):
         errors.append("generated worker catalog version is stale")
 
     route_wrapper = (PLUGIN / "scripts/dreamteam_route.py").read_text(encoding="utf-8")

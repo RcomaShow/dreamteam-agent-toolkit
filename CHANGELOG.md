@@ -2,6 +2,18 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.5] - 2026-07-22
+
+### Added
+
+- Versioned closed JSON Schemas for doctor and status machine-readable output.
+- Deterministic CycloneDX 1.5 SBOM included in release checksums.
+- Explicit 0.4 maintenance policy, threat boundary, and known limitations.
+
+### Changed
+
+- The 0.4 line is feature-frozen after this stability candidate; new capabilities move to 0.5.
+
 ## [0.4.4] - 2026-07-22
 
 ### Added

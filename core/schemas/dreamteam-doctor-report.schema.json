@@ -1,0 +1,109 @@
+{
+  "$id": "https://github.com/RcomaShow/dreamteam-agent-toolkit/schemas/dreamteam-doctor-report-v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "config_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "config_path": {
+      "type": "string"
+    },
+    "diagnostics": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "fix": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ]
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message",
+          "fix"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "enforcement": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ledger": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "pricing_as_of": {
+      "format": "date",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "profile": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "project_root": {
+      "type": "string"
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "telemetry_enabled": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "toolkit_version": {
+      "type": "string"
+    },
+    "topology": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "toolkit_version",
+    "ready",
+    "project_root",
+    "config_path",
+    "diagnostics"
+  ],
+  "title": "DreamTeam Doctor Report v1",
+  "type": "object"
+}

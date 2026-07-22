@@ -46,11 +46,15 @@ jobs:
           python-version: "3.12"
       - name: Build wheel and install it in an isolated environment
         run: |
-          python -m pip wheel . --no-deps -w wheelhouse
-          python -m venv .venv
-          .venv/bin/python -m pip install wheelhouse/*.whl
-          .venv/bin/dreamteam --help
+          rm -rf /tmp/dreamteam-wheel-src /tmp/dreamteam-wheelhouse /tmp/dreamteam-venv
+          mkdir -p /tmp/dreamteam-wheel-src /tmp/dreamteam-wheelhouse
+          git archive --format=tar HEAD | tar -xf - -C /tmp/dreamteam-wheel-src
+          python -m pip wheel /tmp/dreamteam-wheel-src --no-deps -w /tmp/dreamteam-wheelhouse
+          python -m venv /tmp/dreamteam-venv
+          /tmp/dreamteam-venv/bin/python -m pip install /tmp/dreamteam-wheelhouse/*.whl
+          /tmp/dreamteam-venv/bin/dreamteam --help
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
       - name: Build release archives
         run: python scripts/build_release.py
       - name: Smoke-test plugin artifact
-        run: python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.4.zip
+        run: python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.5.zip
