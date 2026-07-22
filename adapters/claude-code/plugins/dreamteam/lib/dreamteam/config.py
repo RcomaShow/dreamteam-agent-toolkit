@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import Enum
@@ -343,6 +344,54 @@ class RuntimeConfig:
             verification=verification,
             telemetry=telemetry,
         )
+
+
+    def effective_mapping(self) -> dict[str, object]:
+        """Return a fully materialized, JSON-safe execution configuration."""
+        return {
+            "version": self.version,
+            "constitution": self.constitution,
+            "topology": self.topology.value,
+            "profile": self.profile.value,
+            "pricingAsOf": self.pricing_as_of.isoformat(),
+            "models": {
+                "executive": self.models.executive,
+                "lead": self.models.lead,
+                "workers": self.models.workers,
+            },
+            "routing": {
+                "minimumSavingsMargin": format(self.routing.minimum_savings_margin.normalize(), "f"),
+                "maxEscalationProbability": format(self.routing.max_escalation_probability.normalize(), "f"),
+                "maxMainRereadRatio": format(self.routing.max_main_reread_ratio.normalize(), "f"),
+                "minSamplesForEnforcement": self.routing.min_samples_for_enforcement,
+                "allowClosedContextBatch": self.routing.allow_closed_context_batch,
+                "allowParallelIndependent": self.routing.allow_parallel_independent,
+            },
+            "budgets": {
+                "maxRunUsd": format(self.budgets.max_run_usd.normalize(), "f"),
+                "maxActiveWorkers": self.budgets.max_active_workers,
+                "maxRetries": self.budgets.max_retries,
+                "maxWorkerTurns": self.budgets.max_worker_turns,
+            },
+            "verification": {
+                "requireIndependentWriterReview": self.verification.require_independent_writer_review,
+                "requireAnchorValidation": self.verification.require_anchor_validation,
+                "allowFullSuite": self.verification.allow_full_suite,
+            },
+            "telemetry": {
+                "enabled": self.telemetry.enabled,
+                "storeSourceContent": self.telemetry.store_source_content,
+                "ledger": self.telemetry.ledger,
+                "enforcement": self.telemetry.enforcement,
+            },
+        }
+
+    @property
+    def effective_hash(self) -> str:
+        encoded = json.dumps(
+            self.effective_mapping(), sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        return "sha256:" + sha256(encoded).hexdigest()
 
 
 def _only(data: Mapping[str, Any], allowed: set[str], context: str) -> None:

@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ARCHIVE = ROOT / "dist/dreamteam-claude-code-plugin-0.4.2.zip"
+ARCHIVE = ROOT / "dist/dreamteam-claude-code-plugin-0.4.3.zip"
 
 
 class PluginArtifactTests(unittest.TestCase):

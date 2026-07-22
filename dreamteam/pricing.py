@@ -1,14 +1,16 @@
-"""Versioned, reproducible API-equivalent USD accounting."""
+"""Versioned, immutable API-equivalent USD accounting."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import Enum
+from hashlib import sha256
+import json
 from typing import Mapping
 
 MTOK = Decimal("1000000")
-
+MODEL_CATALOG_ID = "claude-model-aliases-v1"
 MODEL_ALIASES: Mapping[str, str] = {
     "haiku": "claude-haiku-4-5",
     "sonnet": "claude-sonnet-5",
@@ -29,6 +31,23 @@ class ModelPrice:
     cache_write_5m_multiplier: Decimal = Decimal("1.25")
     cache_write_1h_multiplier: Decimal = Decimal("2.00")
     batch_multiplier: Decimal = Decimal("0.50")
+
+
+_INTRO = {
+    "claude-haiku-4-5": ModelPrice(Decimal("1"), Decimal("5")),
+    "claude-sonnet-5": ModelPrice(Decimal("2"), Decimal("10")),
+    "claude-opus-4-8": ModelPrice(Decimal("5"), Decimal("25")),
+}
+_STANDARD = {
+    "claude-haiku-4-5": ModelPrice(Decimal("1"), Decimal("5")),
+    "claude-sonnet-5": ModelPrice(Decimal("3"), Decimal("15")),
+    "claude-opus-4-8": ModelPrice(Decimal("5"), Decimal("25")),
+}
+PRICE_CATALOGS: Mapping[date, Mapping[str, ModelPrice]] = {
+    date(2026, 7, 17): _INTRO,
+    date(2026, 8, 31): _INTRO,
+    date(2026, 9, 1): _STANDARD,
+}
 
 
 @dataclass(frozen=True)
@@ -88,6 +107,9 @@ class PriceBook:
     def __init__(self, as_of: date) -> None:
         if not isinstance(as_of, date):
             raise TypeError("as_of must be a date")
+        if as_of not in PRICE_CATALOGS:
+            supported = ", ".join(item.isoformat() for item in sorted(PRICE_CATALOGS))
+            raise ValueError(f"unsupported pricing snapshot {as_of.isoformat()}; supported: {supported}")
         self.as_of = as_of
 
     @classmethod
@@ -98,7 +120,7 @@ class PriceBook:
         try:
             return cls(date.fromisoformat(catalog_id[len(prefix) :]))
         except ValueError as exc:
-            raise ValueError("invalid pricing catalog date") from exc
+            raise ValueError("invalid or unsupported pricing catalog date") from exc
 
     @property
     def catalog_id(self) -> str:
@@ -106,13 +128,23 @@ class PriceBook:
 
     @property
     def prices(self) -> Mapping[str, ModelPrice]:
-        sonnet_input = Decimal("2") if self.as_of <= date(2026, 8, 31) else Decimal("3")
-        sonnet_output = Decimal("10") if self.as_of <= date(2026, 8, 31) else Decimal("15")
-        return {
-            "claude-haiku-4-5": ModelPrice(Decimal("1"), Decimal("5")),
-            "claude-sonnet-5": ModelPrice(sonnet_input, sonnet_output),
-            "claude-opus-4-8": ModelPrice(Decimal("5"), Decimal("25")),
+        return PRICE_CATALOGS[self.as_of]
+
+    @property
+    def catalog_hash(self) -> str:
+        payload = {
+            model: {
+                "input_per_mtok": str(price.input_per_mtok),
+                "output_per_mtok": str(price.output_per_mtok),
+                "cache_read_multiplier": str(price.cache_read_multiplier),
+                "cache_write_5m_multiplier": str(price.cache_write_5m_multiplier),
+                "cache_write_1h_multiplier": str(price.cache_write_1h_multiplier),
+                "batch_multiplier": str(price.batch_multiplier),
+            }
+            for model, price in sorted(self.prices.items())
         }
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return "sha256:" + sha256(encoded).hexdigest()
 
     def get(self, model: str) -> ModelPrice:
         resolved = resolve_model(model)

@@ -15,8 +15,10 @@ from typing import Any
 PLUGIN = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN / "lib"))
 
+from dreamteam import __version__
 from dreamteam.config import RuntimeConfig
 from dreamteam.ledger import LedgerConflictError, ReadEvent, RunLedger, line_range_to_offsets
+from dreamteam.pricing import MODEL_CATALOG_ID, PriceBook
 from dreamteam.protocol import ProtocolError, protocol_identity, validate
 
 READ_COMMANDS = {"cat", "sed", "awk", "rg", "grep", "head", "tail", "less", "more"}
@@ -603,6 +605,21 @@ def handle(
 
         if config_hash is None or not ledger.bind_config(run_id, config_hash):
             message = "DreamTeam configuration changed during the active run"
+            return _deny(message) if strict else _context(event_name or "PreToolUse", message)
+        try:
+            price_book = PriceBook(config.pricing_as_of)
+            context_bound = ledger.bind_run_context(
+                run_id,
+                effective_config_hash=config.effective_hash,
+                runtime_version=__version__,
+                pricing_catalog_id=price_book.catalog_id,
+                pricing_catalog_hash=price_book.catalog_hash,
+                model_catalog_id=MODEL_CATALOG_ID,
+            )
+        except (TypeError, ValueError, RuntimeError) as exc:
+            return _deny(f"DreamTeam reproducibility context is invalid: {exc}")
+        if not context_bound:
+            message = "DreamTeam effective configuration or pricing context changed during the run"
             return _deny(message) if strict else _context(event_name or "PreToolUse", message)
 
         if phase == "pre":

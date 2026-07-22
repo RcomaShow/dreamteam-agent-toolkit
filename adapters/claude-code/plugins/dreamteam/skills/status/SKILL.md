@@ -1,11 +1,11 @@
 ---
 name: status
-description: Read a redacted DreamTeam 0.4.2 run summary from the metadata-only SQLite ledger.
+description: Read a redacted DreamTeam 0.4.3 run summary from the metadata-only SQLite ledger.
 argument-hint: "[--run <run-id>] [--format json]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Status 0.4.2
+# DreamTeam Status 0.4.3
 
 Read durable metadata without exposing source content, prompts, raw commands, or credentials:
 

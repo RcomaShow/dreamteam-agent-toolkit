@@ -1,11 +1,11 @@
 ---
 name: run
-description: Route an engineering task through DreamTeam 0.4.2 Lean, Opus-Sonnet, or Frontier topology using strict runtime gates and explicit quality ownership.
+description: Route an engineering task through DreamTeam 0.4.3 Lean, Opus-Sonnet, or Frontier topology using strict runtime gates and explicit quality ownership.
 argument-hint: "topology=<lean|opus-sonnet|frontier> profile=<economy|balanced|offload|quality> <task>"
 disable-model-invocation: true
 ---
 
-# DreamTeam Run 0.4.2
+# DreamTeam Run 0.4.3
 
 Task: `$ARGUMENTS`
 

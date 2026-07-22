@@ -2,6 +2,19 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.3] - 2026-07-22
+
+### Added
+
+- Explicit immutable pricing snapshots with content hashes and rejection of unknown dates.
+- Fully materialized effective-config hashing independent of omitted profile defaults.
+- Ledger schema version 1 and immutable runtime, pricing, model-catalog, and effective-config run context.
+- Doctor diagnostics for pinned pricing identity.
+
+### Compatibility
+
+- Existing schema-version-zero 0.4 ledgers are upgraded in place by creating additive tables and setting user_version=1.
+
 ## [0.4.2] - 2026-07-22
 
 ### Fixed

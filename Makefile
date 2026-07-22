@@ -1,5 +1,5 @@
 PYTHON ?= python3
-PLUGIN_ARCHIVE := dist/dreamteam-claude-code-plugin-0.4.2.zip
+PLUGIN_ARCHIVE := dist/dreamteam-claude-code-plugin-0.4.3.zip
 
 .PHONY: sync validate test compile check measure build smoke release
 

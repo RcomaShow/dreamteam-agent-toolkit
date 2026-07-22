@@ -10,6 +10,7 @@ _ALLOWED_OWNERS = {"main", "worker"}
 _ALLOWED_REASONS = {"explore", "verify", "decision", "contradiction", "c3", "gate", "tool", "test"}
 _ALLOWED_STATES = {"PENDING", "RUNNING", "DONE", "FAILED", "BLOCKED", "CANCELLED"}
 _TERMINAL_STATES = {"DONE", "FAILED", "BLOCKED", "CANCELLED"}
+LEDGER_SCHEMA_VERSION = 1
 
 
 class LedgerConflictError(ValueError):
@@ -53,6 +54,12 @@ class RunLedger:
         )
         self.connection.execute("PRAGMA foreign_keys=ON")
         self.connection.execute("PRAGMA busy_timeout=5000")
+        schema_version = int(self.connection.execute("PRAGMA user_version").fetchone()[0])
+        if schema_version > LEDGER_SCHEMA_VERSION:
+            self.connection.close()
+            raise RuntimeError(
+                f"ledger schema {schema_version} is newer than supported {LEDGER_SCHEMA_VERSION}"
+            )
         if self.database != ":memory:":
             self.connection.execute("PRAGMA journal_mode=WAL")
         self.connection.executescript(
@@ -129,6 +136,14 @@ class RunLedger:
               run_id TEXT PRIMARY KEY,
               config_hash TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS run_context(
+              run_id TEXT PRIMARY KEY,
+              effective_config_hash TEXT NOT NULL,
+              runtime_version TEXT NOT NULL,
+              pricing_catalog_id TEXT NOT NULL,
+              pricing_catalog_hash TEXT NOT NULL,
+              model_catalog_id TEXT NOT NULL
+            );
             CREATE TABLE IF NOT EXISTS contract_bindings(
               run_id TEXT NOT NULL,
               task_id TEXT NOT NULL,
@@ -139,6 +154,8 @@ class RunLedger:
             );
             """
         )
+        if schema_version == 0:
+            self.connection.execute(f"PRAGMA user_version={LEDGER_SCHEMA_VERSION}")
 
     def close(self) -> None:
         self.connection.close()
@@ -164,6 +181,49 @@ class RunLedger:
             (run_id,),
         ).fetchone()
         return None if row is None else str(row[0])
+
+    def bind_run_context(
+        self,
+        run_id: str,
+        *,
+        effective_config_hash: str,
+        runtime_version: str,
+        pricing_catalog_id: str,
+        pricing_catalog_hash: str,
+        model_catalog_id: str,
+    ) -> bool:
+        values = (
+            effective_config_hash,
+            runtime_version,
+            pricing_catalog_id,
+            pricing_catalog_hash,
+            model_catalog_id,
+        )
+        if not run_id or not all(values):
+            raise ValueError("run context fields are required")
+        self.connection.execute(
+            """INSERT OR IGNORE INTO run_context
+            (run_id,effective_config_hash,runtime_version,pricing_catalog_id,
+             pricing_catalog_hash,model_catalog_id)
+            VALUES(?,?,?,?,?,?)""",
+            (run_id, *values),
+        )
+        row = self.connection.execute(
+            """SELECT effective_config_hash,runtime_version,pricing_catalog_id,
+                      pricing_catalog_hash,model_catalog_id
+               FROM run_context WHERE run_id=?""",
+            (run_id,),
+        ).fetchone()
+        return bool(row and tuple(row) == values)
+
+    def run_context(self, run_id: str) -> tuple[str, str, str, str, str] | None:
+        row = self.connection.execute(
+            """SELECT effective_config_hash,runtime_version,pricing_catalog_id,
+                      pricing_catalog_hash,model_catalog_id
+               FROM run_context WHERE run_id=?""",
+            (run_id,),
+        ).fetchone()
+        return None if row is None else tuple(str(item) for item in row)
 
     def bind_contract(
         self,
