@@ -52,7 +52,7 @@ def split_record(line: str) -> list[str]:
     fields: list[str] = []
     current: list[str] = []
     escape = False
-    for char in line.rstrip("\n"):
+    for char in line.rstrip("\r\n"):
         if escape:
             decoded = {"n": "\n", "r": "\r", "|": "|", "\\": "\\"}.get(char)
             if decoded is None:
@@ -77,8 +77,10 @@ def escape_field(value: str) -> str:
 
 
 def parse(text: str) -> list[Record]:
+    if any(separator in text for separator in ("\x85", "\u2028", "\u2029")):
+        raise ProtocolError("Unicode line separators are not supported")
     records: list[Record] = []
-    for number, raw in enumerate(text.splitlines(), 1):
+    for number, raw in enumerate(text.split("\n"), 1):
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
         fields = split_record(raw)

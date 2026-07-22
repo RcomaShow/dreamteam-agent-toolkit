@@ -2,6 +2,18 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.4] - 2026-07-22
+
+### Added
+
+- Semantic validation of direct and DreamTeam benchmark arm model composition.
+- Seeded adversarial protocol round-trip tests and explicit rejection of Unicode line separators.
+- Python 3.11, 3.12, and 3.13 CI coverage plus isolated wheel installation smoke testing.
+
+### Fixed
+
+- CRLF records are normalized without retaining carriage returns in protocol fields.
+
 ## [0.4.3] - 2026-07-22
 
 ### Added

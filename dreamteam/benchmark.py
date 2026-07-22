@@ -7,7 +7,7 @@ from enum import Enum
 from statistics import median
 from typing import Any, Iterable
 
-from .pricing import ExecutionLane, PriceBook, TokenUsage, estimate_cost
+from .pricing import ExecutionLane, PriceBook, TokenUsage, estimate_cost, resolve_model
 
 
 class Arm(str, Enum):
@@ -191,6 +191,7 @@ class RunResult:
         )
         if cache_writes != self.cache_write_tokens:
             raise ValueError("cache_write_tokens must equal model_usage cache writes")
+        validate_arm_semantics(self)
 
     @property
     def bucket_key(self) -> tuple[str, ...]:
@@ -255,6 +256,47 @@ class PairResult:
     @property
     def bucket_key(self) -> tuple[str, ...]:
         return self.dreamteam.bucket_key
+
+
+def validate_arm_semantics(result: RunResult) -> None:
+    models = {resolve_model(record.model) for record in result.model_usage}
+    sonnet = "claude-sonnet-5"
+    haiku = "claude-haiku-4-5"
+    opus = "claude-opus-4-8"
+    if result.arm is Arm.DIRECT:
+        if result.route != "MAIN_DIRECT":
+            raise ValueError("direct arm must use MAIN_DIRECT")
+        if result.agent_role != "direct-sonnet":
+            raise ValueError("direct arm must use direct-sonnet role")
+        if result.worker_tokens != 0:
+            raise ValueError("direct arm may not report worker tokens")
+        if models != {sonnet}:
+            raise ValueError("direct arm must be Sonnet-only")
+        if any(record.lane is not ExecutionLane.INTERACTIVE for record in result.model_usage):
+            raise ValueError("direct arm must use the interactive lane")
+        return
+
+    if result.route == "MAIN_DIRECT":
+        if result.worker_tokens != 0 or models != {sonnet}:
+            raise ValueError("DreamTeam MAIN_DIRECT fallback must remain Sonnet-only")
+        return
+    if result.topology == "lean":
+        if opus in models:
+            raise ValueError("Lean benchmark arm may not contain Opus usage")
+        if result.route in {"HAIKU_DISCOVERY", "HAIKU_EXECUTE"} and haiku not in models:
+            raise ValueError("Lean Haiku route must contain Haiku usage")
+        if result.route == "SONNET_LEAD" and sonnet not in models:
+            raise ValueError("Lean Sonnet route must contain Sonnet usage")
+        return
+    if result.topology == "opus-sonnet":
+        if haiku in models or not {opus, sonnet}.issubset(models):
+            raise ValueError("Opus-Sonnet must contain Opus and Sonnet with no hidden Haiku")
+        return
+    if result.topology == "frontier":
+        if not {opus, sonnet, haiku}.issubset(models):
+            raise ValueError("Frontier must account for Opus, Sonnet, and Haiku")
+        return
+    raise ValueError("unsupported benchmark topology")
 
 
 def recompute_api_equivalent_usd(result: RunResult) -> Decimal:
