@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dreamteam-agent-toolkit"
+version = "0.4.1"
+description = "Constitution-guided orchestration toolkit for Claude Code"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "RcomaShow" }]
+dependencies = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+]
+
+[project.optional-dependencies]
+dev = [
+  "coverage>=7.6",
+  "mypy>=1.10",
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+
+[project.scripts]
+dreamteam = "dreamteam.operations:main"
+
+[tool.setuptools.packages.find]
+include = ["dreamteam*"]
+
+[tool.setuptools.package-data]
+dreamteam = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["dreamteam"]

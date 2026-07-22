@@ -76,6 +76,9 @@ def copy_runtime() -> None:
     LIB.mkdir(parents=True, exist_ok=True)
     for source in sorted((ROOT / "dreamteam").glob("*.py")):
         shutil.copy2(source, LIB / source.name)
+    typed_marker = ROOT / "dreamteam/py.typed"
+    if typed_marker.is_file():
+        shutil.copy2(typed_marker, LIB / typed_marker.name)
 
 
 def generate_agents() -> None:
@@ -83,7 +86,7 @@ def generate_agents() -> None:
     agent_dir.mkdir(parents=True, exist_ok=True)
     expected: set[str] = set()
     catalog = [
-        "# DreamTeam 0.4 Worker Catalog",
+        "# DreamTeam 0.4.1 Worker Catalog",
         "",
         "| Agent | Model | Effort | Role |",
         "|---|---|---|---|",

@@ -1,18 +1,9 @@
-# DreamTeam for Claude Code 0.4
+# DreamTeam for Claude Code 0.4.1
 
 Development:
 
 ```bash
 claude --plugin-dir ./adapters/claude-code/plugins/dreamteam
-```
-
-Commands:
-
-```text
-/dreamteam:run topology=<lean|opus-sonnet|frontier> profile=<economy|balanced|offload|quality> <task>
-/dreamteam:review
-/dreamteam:measure <results.json>
-/dreamteam:doctor
 ```
 
 Marketplace:
@@ -23,4 +14,23 @@ Marketplace:
 /plugin enable dreamteam@dreamteam-tools
 ```
 
-The plugin installs disabled by default because it contributes enforcement hooks. The root session remains the only physical dispatcher; thirteen Haiku workers and three Sonnet roles receive bounded contracts, while Opus is used by the executive session in `opus-sonnet` and `frontier` topologies. Run `/dreamteam:doctor` before enabling strict telemetry.
+First run:
+
+```text
+/dreamteam:init
+/dreamteam:doctor
+/dreamteam:run topology=lean profile=balanced <task>
+```
+
+Operational commands:
+
+```text
+/dreamteam:init [--topology lean] [--profile balanced] [--strict] [--force]
+/dreamteam:doctor [--format json]
+/dreamteam:status [--run <run-id>] [--format json]
+/dreamteam:run topology=<lean|opus-sonnet|frontier> profile=<economy|balanced|offload|quality> <task>
+/dreamteam:review
+/dreamteam:measure <results.json>
+```
+
+The plugin installs disabled by default because it contributes enforcement hooks. The root session remains the only physical dispatcher; thirteen Haiku workers and three Sonnet roles receive bounded contracts, while Opus is used by the executive session in `opus-sonnet` and `frontier` topologies. In Opus-Sonnet, the bounded implementer and independent reviewer are different Sonnet agent identities. Run `/dreamteam:doctor` before enabling strict telemetry.

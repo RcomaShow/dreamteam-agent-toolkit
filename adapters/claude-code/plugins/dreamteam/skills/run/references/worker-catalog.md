@@ -1,4 +1,4 @@
-# DreamTeam 0.4 Worker Catalog
+# DreamTeam 0.4.1 Worker Catalog
 
 | Agent | Model | Effort | Role |
 |---|---|---|---|

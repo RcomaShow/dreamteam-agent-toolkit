@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "dreamteam",
   "displayName": "DreamTeam",
-  "version": "0.4.0",
-  "description": "Fail-closed tiered orchestration with Lean, Opus-Sonnet, and Frontier topologies, executable profiles, bound handoffs, and measured USD routing.",
+  "version": "0.4.1",
+  "description": "Usable fail-closed orchestration with Lean, Opus-Sonnet, and Frontier topologies, deterministic onboarding, bound handoffs, and measured USD routing.",
   "author": {
     "name": "RcomaShow",
     "url": "https://github.com/RcomaShow"

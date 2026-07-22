@@ -1,11 +1,11 @@
 ---
 name: measure
-description: Summarize strict DreamTeam 0.4 paired benchmarks with recomputed costs, pair invariants, cache cohorts, bucket gates, and fail-closed claims.
+description: Summarize strict DreamTeam 0.4.1 paired benchmarks with recomputed costs, pair invariants, cache cohorts, bucket gates, and fail-closed claims.
 argument-hint: "<results.json>"
 disable-model-invocation: true
 ---
 
-# DreamTeam Measure 0.4
+# DreamTeam Measure 0.4.1
 
 Use the same task, commit, oracle, config hash, environment, timeout, and cache cohort for both arms. Randomize arm order.
 

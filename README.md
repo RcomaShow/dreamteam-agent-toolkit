@@ -1,20 +1,89 @@
 # DreamTeam Agent Toolkit
 
+[![validate](https://github.com/RcomaShow/dreamteam-agent-toolkit/actions/workflows/validate.yml/badge.svg)](https://github.com/RcomaShow/dreamteam-agent-toolkit/actions/workflows/validate.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **The right agent for every task. Orchestrate smarter. Spend less.**
 
-DreamTeam 0.4 is a constitution-guided orchestration toolkit and self-contained Claude Code plugin. It combines executable model routing, strict project-root enforcement, durable cost accounting, bound DCP/2–CHP/2 handoffs, and claim-safe paired benchmarks.
+DreamTeam 0.4.1 is a constitution-guided orchestration toolkit and self-contained Claude Code plugin. It combines executable model routing, project-root enforcement, metadata-only cost accounting, bound DCP/2–CHP/2 handoffs, and claim-safe paired benchmarks.
+
+## Five-minute first run
+
+Install and enable the plugin:
+
+```text
+/plugin marketplace add RcomaShow/dreamteam-agent-toolkit
+/plugin install dreamteam@dreamteam-tools
+/plugin enable dreamteam@dreamteam-tools
+```
+
+Create the recommended first-run configuration and inspect it:
+
+```text
+/dreamteam:init
+/dreamteam:doctor
+```
+
+Then run a task:
+
+```text
+/dreamteam:run topology=lean profile=balanced <task>
+```
+
+The generated configuration uses the safe onboarding defaults:
+
+```text
+Topology:   lean
+Profile:    balanced
+Telemetry:  disabled
+Ledger:     off
+Enforcement: advisory
+```
+
+`/dreamteam:init` never silently overwrites an existing configuration. Use `--force` only after reviewing the replacement. Advanced strict enforcement is opt-in:
+
+```text
+/dreamteam:init --strict --force
+/dreamteam:doctor
+```
+
+Strict mode requires SQLite telemetry and working Claude Code hooks. It is intended for audited runs, not as a prerequisite for trying the toolkit.
 
 ## Topologies
 
 ```text
 Lean:          Sonnet 5 executive → Haiku 4.5 bounded workers
-Opus-Sonnet:   Opus 4.8 executive → Sonnet 5 lead/reviewer
+Opus-Sonnet:   Opus 4.8 executive → Sonnet 5 bounded implementer + independent reviewer
 Frontier:      Opus 4.8 executive → Sonnet 5 lead/reviewer → Haiku 4.5 workers
 ```
 
-Physical dispatch remains flat and owned by the root session. Workers cannot spawn workers. C3 and public-contract decisions stay executive-owned, and a writer cannot be its own acceptance oracle.
+Physical dispatch remains flat and owned by the root session. Workers cannot spawn workers. C3 and public-contract decisions stay executive-owned. A writing agent cannot be its own acceptance oracle.
 
-## What 0.4 enforces
+In Opus-Sonnet, `execution-sonnet-lead` is the bounded implementation role; `verification-independent-reviewer` is a different agent identity. There is no hidden Haiku stage and no missing execution layer.
+
+## Operational commands
+
+```text
+/dreamteam:init [--topology lean] [--profile balanced] [--strict] [--force]
+/dreamteam:doctor [--format json]
+/dreamteam:status [--run <run-id>] [--format json]
+/dreamteam:run topology=<lean|opus-sonnet|frontier> profile=<economy|balanced|offload|quality> <task>
+/dreamteam:review
+/dreamteam:measure <results.json>
+```
+
+`status` reads only metadata from SQLite: charges, reservations, checkpoints, failed tool events, and invalidation categories. It does not reveal source content, prompts, raw commands, or credentials. When telemetry is disabled, it explains why no durable status exists.
+
+The same deterministic project commands are available after Python installation:
+
+```bash
+python -m pip install -e .
+dreamteam init --project-root .
+dreamteam doctor --project-root .
+dreamteam status --project-root . --run <run-id>
+```
+
+## What DreamTeam enforces
 
 - strict JSON configuration and request parsing;
 - executable `economy`, `balanced`, `offload`, and `quality` profiles;
@@ -27,34 +96,20 @@ Physical dispatch remains flat and owned by the root session. Workers cannot spa
 - API-equivalent cost recomputation and bucket-specific publication gates;
 - release archives built only from a clean, tracked Git tree with a source manifest.
 
-The plugin installs disabled by default because it contributes enforcement hooks. Enable it explicitly after reviewing `dreamteam.config.json`. No provider executor, network download, credential access, dependency installation, or paid inference is bundled.
-
-## Claude Code
-
-```text
-/plugin marketplace add RcomaShow/dreamteam-agent-toolkit
-/plugin install dreamteam@dreamteam-tools
-/plugin enable dreamteam@dreamteam-tools
-/dreamteam:run topology=opus-sonnet profile=balanced <task>
-/dreamteam:review
-/dreamteam:measure results.json
-/dreamteam:doctor
-```
+The plugin installs disabled by default because it contributes enforcement hooks. No provider executor, network download, credential access, dependency installation, or paid inference is bundled.
 
 ## Validate
 
 ```bash
-python scripts/sync_claude_adapter.py
-git diff --exit-code
-python scripts/validate.py
-python -m unittest discover -s tests -v
+make check
 python scripts/measure.py
-python -m compileall dreamteam adapters/claude-code/plugins/dreamteam
 python scripts/build_release.py
-python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.0.zip
+python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.1.zip
 ```
 
-Version 0.4 provides machinery to route and measure safely. It does not claim universal empirical savings until representative paired benchmarks pass every bucket gate.
+The expanded commands are documented in [`PUBLISHING.md`](PUBLISHING.md). The implementation scope and architectural decisions for this release are recorded in [`docs/v0.4.1-implementation-plan.md`](docs/v0.4.1-implementation-plan.md).
+
+DreamTeam provides machinery to route and measure safely. It does not claim universal empirical savings until representative paired benchmarks pass every quality and economic bucket gate.
 
 ## License
 
