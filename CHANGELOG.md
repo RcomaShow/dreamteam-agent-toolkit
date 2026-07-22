@@ -2,6 +2,19 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.2] - 2026-07-22
+
+### Fixed
+
+- Terminal checkpoint state and result hashes are now immutable and transactionally idempotent.
+- Pending-read and tool-event idempotency keys reject conflicting metadata instead of silently replacing or ignoring it.
+- Strict hooks reject cwd-derived project roots and symlinked plugin-data or ledger paths.
+- Ledger and filesystem integrity failures are converted into structured deny decisions.
+
+### Compatibility
+
+- Config v2, DCP/2, CHP/2, routes, models, and benchmark formats are unchanged.
+
 ## [0.4.1] - 2026-07-21
 
 ### Added

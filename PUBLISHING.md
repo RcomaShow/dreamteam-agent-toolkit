@@ -1,4 +1,4 @@
-# Publishing DreamTeam 0.4.1
+# Publishing DreamTeam 0.4.2
 
 Run from a clean repository root:
 
@@ -10,7 +10,7 @@ python -m unittest discover -s tests -v
 python scripts/measure.py
 python -m compileall dreamteam adapters/claude-code/plugins/dreamteam
 python scripts/build_release.py
-python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.1.zip
+python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.2.zip
 ```
 
 Equivalent developer shortcuts:

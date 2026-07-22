@@ -1,11 +1,11 @@
 ---
 name: doctor
-description: Run deterministic DreamTeam 0.4.1 configuration, packaging, hook, agent-catalog, and strict-readiness diagnostics with actionable fixes.
+description: Run deterministic DreamTeam 0.4.2 configuration, packaging, hook, agent-catalog, and strict-readiness diagnostics with actionable fixes.
 argument-hint: "[--format json] [--plugin-data <path>]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Doctor 0.4.1
+# DreamTeam Doctor 0.4.2
 
 Inspect without changing project configuration or ledger state:
 

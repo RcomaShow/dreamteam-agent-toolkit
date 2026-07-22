@@ -12,6 +12,10 @@ _ALLOWED_STATES = {"PENDING", "RUNNING", "DONE", "FAILED", "BLOCKED", "CANCELLED
 _TERMINAL_STATES = {"DONE", "FAILED", "BLOCKED", "CANCELLED"}
 
 
+class LedgerConflictError(ValueError):
+    """Raised when an idempotency key is reused with different immutable data."""
+
+
 @dataclass(frozen=True)
 class ReadEvent:
     run_id: str
@@ -273,26 +277,40 @@ class RunLedger:
     def stage_read(self, tool_use_id: str, event: ReadEvent) -> None:
         if not tool_use_id:
             raise ValueError("tool_use_id is required")
-        self.connection.execute(
-            """INSERT INTO pending_reads
-            (run_id,tool_use_id,agent_id,owner,path,blob_id,start_offset,end_offset,reason)
-            VALUES(?,?,?,?,?,?,?,?,?)
-            ON CONFLICT(run_id,tool_use_id) DO UPDATE SET
-              agent_id=excluded.agent_id, owner=excluded.owner, path=excluded.path,
-              blob_id=excluded.blob_id, start_offset=excluded.start_offset,
-              end_offset=excluded.end_offset, reason=excluded.reason""",
-            (
-                event.run_id,
-                tool_use_id,
-                event.agent_id,
-                event.owner,
-                event.path,
-                event.blob_id,
-                event.start_offset,
-                event.end_offset,
-                event.reason,
-            ),
+        values = (
+            event.agent_id,
+            event.owner,
+            event.path,
+            event.blob_id,
+            event.start_offset,
+            event.end_offset,
+            event.reason,
         )
+        self.connection.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.connection.execute(
+                """SELECT agent_id,owner,path,blob_id,start_offset,end_offset,reason
+                   FROM pending_reads WHERE run_id=? AND tool_use_id=?""",
+                (event.run_id, tool_use_id),
+            ).fetchone()
+            if row is None:
+                self.connection.execute(
+                    """INSERT INTO pending_reads
+                    (run_id,tool_use_id,agent_id,owner,path,blob_id,start_offset,end_offset,reason)
+                    VALUES(?,?,?,?,?,?,?,?,?)""",
+                    (event.run_id, tool_use_id, *values),
+                )
+                self.connection.execute("COMMIT")
+                return
+            if tuple(row) != values:
+                raise LedgerConflictError(
+                    "pending read tool_use_id was reused with different immutable metadata"
+                )
+            self.connection.execute("COMMIT")
+        except Exception:
+            if self.connection.in_transaction:
+                self.connection.execute("ROLLBACK")
+            raise
 
     def pending_read(self, run_id: str, tool_use_id: str) -> ReadEvent | None:
         row = self.connection.execute(
@@ -365,13 +383,33 @@ class RunLedger:
             raise ValueError("invalid tool event status")
         if not all((run_id, agent_id, tool_use_id, tool_name, metadata_hash)):
             raise ValueError("tool event fields are required")
-        cursor = self.connection.execute(
-            """INSERT OR IGNORE INTO tool_events_v04
-            (run_id,agent_id,tool_use_id,tool_name,status,metadata_hash)
-            VALUES(?,?,?,?,?,?)""",
-            (run_id, agent_id, tool_use_id, tool_name, status, metadata_hash),
-        )
-        return cursor.rowcount == 1
+        values = (agent_id, tool_name, metadata_hash)
+        self.connection.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.connection.execute(
+                """SELECT agent_id,tool_name,metadata_hash FROM tool_events_v04
+                   WHERE run_id=? AND tool_use_id=? AND status=?""",
+                (run_id, tool_use_id, status),
+            ).fetchone()
+            if row is None:
+                self.connection.execute(
+                    """INSERT INTO tool_events_v04
+                    (run_id,agent_id,tool_use_id,tool_name,status,metadata_hash)
+                    VALUES(?,?,?,?,?,?)""",
+                    (run_id, agent_id, tool_use_id, tool_name, status, metadata_hash),
+                )
+                self.connection.execute("COMMIT")
+                return True
+            if tuple(row) != values:
+                raise LedgerConflictError(
+                    "tool event idempotency key was reused with different immutable metadata"
+                )
+            self.connection.execute("COMMIT")
+            return False
+        except Exception:
+            if self.connection.in_transaction:
+                self.connection.execute("ROLLBACK")
+            raise
 
     def main_reread_ratio(self, run_id: str, additional_main: ReadEvent | None = None) -> float:
         rows = self.connection.execute(
@@ -409,22 +447,39 @@ class RunLedger:
             raise ValueError("invalid checkpoint state")
         if not run_id or not node_id:
             raise ValueError("run_id and node_id are required")
-        current_row = self.connection.execute(
-            "SELECT state FROM checkpoints WHERE run_id=? AND node_id=?",
-            (run_id, node_id),
-        ).fetchone()
-        current = None if current_row is None else current_row[0]
-        if current in _TERMINAL_STATES and state != current:
-            raise ValueError(f"terminal checkpoint {current} cannot transition to {state}")
-        if current == "RUNNING" and state == "PENDING":
-            raise ValueError("RUNNING checkpoint cannot return to PENDING")
-        self.connection.execute(
-            """INSERT INTO checkpoints(run_id,node_id,state,result_hash) VALUES(?,?,?,?)
-               ON CONFLICT(run_id,node_id) DO UPDATE SET
-                 state=excluded.state,
-                 result_hash=excluded.result_hash""",
-            (run_id, node_id, state, result_hash),
-        )
+        self.connection.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.connection.execute(
+                "SELECT state,result_hash FROM checkpoints WHERE run_id=? AND node_id=?",
+                (run_id, node_id),
+            ).fetchone()
+            if row is None:
+                self.connection.execute(
+                    "INSERT INTO checkpoints(run_id,node_id,state,result_hash) VALUES(?,?,?,?)",
+                    (run_id, node_id, state, result_hash),
+                )
+                self.connection.execute("COMMIT")
+                return
+            current_state, current_hash = row
+            if current_state in _TERMINAL_STATES:
+                if state != current_state or result_hash != current_hash:
+                    raise LedgerConflictError(
+                        "terminal checkpoint state and result hash are immutable"
+                    )
+                self.connection.execute("COMMIT")
+                return
+            if current_state == "RUNNING" and state == "PENDING":
+                raise ValueError("RUNNING checkpoint cannot return to PENDING")
+            self.connection.execute(
+                """UPDATE checkpoints SET state=?,result_hash=?
+                   WHERE run_id=? AND node_id=?""",
+                (state, result_hash, run_id, node_id),
+            )
+            self.connection.execute("COMMIT")
+        except Exception:
+            if self.connection.in_transaction:
+                self.connection.execute("ROLLBACK")
+            raise
 
     def active_workers(self, run_id: str) -> int:
         return self.connection.execute(

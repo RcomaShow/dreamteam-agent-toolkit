@@ -1,11 +1,11 @@
 ---
 name: init
-description: Create a validated DreamTeam 0.4.1 project configuration using safe advisory defaults or an explicit strict opt-in.
+description: Create a validated DreamTeam 0.4.2 project configuration using safe advisory defaults or an explicit strict opt-in.
 argument-hint: "[--topology lean] [--profile balanced] [--strict] [--force] [--format json]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Init 0.4.1
+# DreamTeam Init 0.4.2
 
 Create `dreamteam.config.json` atomically in the stable Claude Code project root:
 

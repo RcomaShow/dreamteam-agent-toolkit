@@ -202,5 +202,44 @@ class LedgerV04Tests(unittest.TestCase):
             second.close()
 
 
+    def test_terminal_checkpoint_result_hash_is_immutable_and_idempotent(self):
+        ledger = RunLedger()
+        try:
+            ledger.checkpoint("r", "n", "DONE", "hash-a")
+            ledger.checkpoint("r", "n", "DONE", "hash-a")
+            from dreamteam.ledger import LedgerConflictError
+
+            with self.assertRaises(LedgerConflictError):
+                ledger.checkpoint("r", "n", "DONE", "hash-b")
+        finally:
+            ledger.close()
+
+    def test_pending_read_idempotency_key_rejects_conflicting_metadata(self):
+        from dreamteam.ledger import LedgerConflictError
+
+        ledger = RunLedger()
+        try:
+            first = ReadEvent("r", "a", "worker", "a.py", "blob", 0, 1, "explore")
+            second = ReadEvent("r", "a", "worker", "b.py", "blob", 0, 1, "explore")
+            ledger.stage_read("tool", first)
+            ledger.stage_read("tool", first)
+            with self.assertRaises(LedgerConflictError):
+                ledger.stage_read("tool", second)
+        finally:
+            ledger.close()
+
+    def test_tool_event_idempotency_key_rejects_conflicting_metadata(self):
+        from dreamteam.ledger import LedgerConflictError
+
+        ledger = RunLedger()
+        try:
+            self.assertTrue(ledger.record_tool_event("r", "a", "tool", "Read", "requested", "h1"))
+            self.assertFalse(ledger.record_tool_event("r", "a", "tool", "Read", "requested", "h1"))
+            with self.assertRaises(LedgerConflictError):
+                ledger.record_tool_event("r", "a", "tool", "Read", "requested", "h2")
+        finally:
+            ledger.close()
+
+
 if __name__ == "__main__":
     unittest.main()

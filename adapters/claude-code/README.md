@@ -1,4 +1,4 @@
-# DreamTeam for Claude Code 0.4.1
+# DreamTeam for Claude Code 0.4.2
 
 Development:
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the exact DreamTeam 0.4.1 plugin ZIP in an isolated directory."""
+"""Smoke-test the exact DreamTeam 0.4.2 plugin ZIP in an isolated directory."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ import sys
 import tempfile
 import zipfile
 
-EXPECTED_VERSION = "0.4.1"
+EXPECTED_VERSION = "0.4.2"
 
 
 def safe_member(name: str) -> bool:

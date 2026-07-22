@@ -519,5 +519,49 @@ class HookV04Tests(unittest.TestCase):
             ledger.close()
 
 
+    def test_strict_mode_rejects_cwd_as_project_root_fallback(self):
+        env = dict(self.env)
+        env.pop("CLAUDE_PROJECT_DIR")
+        result = self.hook.handle(
+            {
+                "cwd": str(self.root),
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Read",
+                "tool_use_id": "unstable-root",
+                "tool_input": {"file_path": "src/a.py"},
+                "session_id": "s",
+            },
+            "pre",
+            env,
+        )
+        self.assertEqual(permission(result), "deny")
+        self.assertIn("cwd fallback", result["hookSpecificOutput"]["permissionDecisionReason"])
+
+    def test_plugin_data_symlink_is_denied_before_ledger_open(self):
+        target = self.root / "real-plugin-data"
+        target.mkdir()
+        link = self.root / "linked-plugin-data"
+        try:
+            link.symlink_to(target, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks are unavailable")
+        env = dict(self.env)
+        env["CLAUDE_PLUGIN_DATA"] = str(link)
+        result = self.hook.handle(
+            {
+                "cwd": str(self.root),
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Read",
+                "tool_use_id": "plugin-data-symlink",
+                "tool_input": {"file_path": "src/a.py"},
+                "session_id": "s",
+            },
+            "pre",
+            env,
+        )
+        self.assertEqual(permission(result), "deny")
+        self.assertIn("symlink", result["hookSpecificOutput"]["permissionDecisionReason"])
+
+
 if __name__ == "__main__":
     unittest.main()

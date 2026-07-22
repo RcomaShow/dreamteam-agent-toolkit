@@ -1,5 +1,11 @@
 # Roadmap
 
+## 0.4.x — Stabilization
+
+- Integrity-safe ledger idempotency and strict path provenance.
+- Reproducible pricing/config context and ledger schema compatibility.
+- Benchmark semantic validation, portability checks, and stability artifacts.
+
 ## 0.4.1 — Usability and Operability
 
 - Five-minute advisory onboarding with atomic configuration generation.

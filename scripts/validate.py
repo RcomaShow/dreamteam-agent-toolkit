@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate DreamTeam 0.4.1 repository, generated adapter, and security invariants."""
+"""Validate DreamTeam 0.4.2 repository, generated adapter, and security invariants."""
 from __future__ import annotations
 
 import importlib
@@ -19,7 +19,7 @@ ALLOWED_AGENT_FIELDS = {
 }
 FORBIDDEN_AGENT_FIELDS = {"hooks", "mcpServers", "permissionMode"}
 ALLOWED_EFFORT = {"low", "medium", "high", "xhigh", "max"}
-EXPECTED_VERSION = "0.4.1"
+EXPECTED_VERSION = "0.4.2"
 
 
 def frontmatter(path: Path) -> dict[str, str]:
@@ -50,6 +50,7 @@ def main() -> int:
         ROOT / "dreamteam.config.minimal.json",
         ROOT / "docs/v0.4-implementation-plan.md",
         ROOT / "docs/v0.4.1-implementation-plan.md",
+        ROOT / "docs/v0.4-stabilization-plan.md",
         PLUGIN / ".claude-plugin/plugin.json",
         PLUGIN / "hooks/hooks.json",
         PLUGIN / "scripts/dreamteam_init.py",
@@ -246,7 +247,7 @@ def main() -> int:
     if "Opus-Sonnet" not in routing:
         errors.append("generated routing reference lacks Opus-Sonnet")
     catalog = (PLUGIN / "skills/run/references/worker-catalog.md").read_text(encoding="utf-8")
-    if not catalog.startswith("# DreamTeam 0.4.1 Worker Catalog\n"):
+    if not catalog.startswith("# DreamTeam 0.4.2 Worker Catalog\n"):
         errors.append("generated worker catalog version is stale")
 
     route_wrapper = (PLUGIN / "scripts/dreamteam_route.py").read_text(encoding="utf-8")

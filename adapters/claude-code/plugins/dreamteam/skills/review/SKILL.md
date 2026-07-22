@@ -1,11 +1,11 @@
 ---
 name: review
-description: Review DreamTeam 0.4.1 route economics, protocol binding, anchors, ledger charges, independent verification, and final quality gates.
+description: Review DreamTeam 0.4.2 route economics, protocol binding, anchors, ledger charges, independent verification, and final quality gates.
 argument-hint: "[optional scope]"
 disable-model-invocation: true
 ---
 
-# DreamTeam Review 0.4.1
+# DreamTeam Review 0.4.2
 
 Scope: `$ARGUMENTS`
 
