@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import sqlite3
 import subprocess
 import sys
 from typing import Any
@@ -14,8 +15,10 @@ from typing import Any
 PLUGIN = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN / "lib"))
 
+from dreamteam import __version__
 from dreamteam.config import RuntimeConfig
-from dreamteam.ledger import ReadEvent, RunLedger, line_range_to_offsets
+from dreamteam.ledger import LedgerConflictError, ReadEvent, RunLedger, line_range_to_offsets
+from dreamteam.pricing import MODEL_CATALOG_ID, PriceBook
 from dreamteam.protocol import ProtocolError, protocol_identity, validate
 
 READ_COMMANDS = {"cat", "sed", "awk", "rg", "grep", "head", "tail", "less", "more"}
@@ -97,12 +100,44 @@ def _block_subagent(reason: str) -> dict[str, object]:
     return {"decision": "block", "reason": reason}
 
 
-def _project_root(data: dict[str, Any], env: dict[str, str]) -> Path:
-    raw = env.get("CLAUDE_PROJECT_DIR") or data.get("project_dir") or data.get("cwd") or "."
+def _project_root(data: dict[str, Any], env: dict[str, str]) -> tuple[Path, bool]:
+    if env.get("CLAUDE_PROJECT_DIR"):
+        raw = env["CLAUDE_PROJECT_DIR"]
+        stable = True
+    elif data.get("project_dir"):
+        raw = data["project_dir"]
+        stable = True
+    else:
+        raw = data.get("cwd") or "."
+        stable = False
     root = Path(str(raw)).resolve(strict=True)
     if not root.is_dir():
         raise PermissionError("project root is not a directory")
-    return root
+    return root, stable
+
+
+def _plugin_data_paths(
+    project_root: Path,
+    env: dict[str, str],
+) -> tuple[Path, Path]:
+    raw = str(env.get("CLAUDE_PLUGIN_DATA") or (project_root / ".dreamteam"))
+    if not raw or "\x00" in raw:
+        raise PermissionError("plugin data path must be non-empty and contain no NUL bytes")
+    candidate = Path(raw).expanduser()
+    if not candidate.is_absolute():
+        candidate = project_root / candidate
+    data_dir = Path(os.path.abspath(str(candidate)))
+    for component in (data_dir, *data_dir.parents):
+        if component.exists() and component.is_symlink():
+            raise PermissionError("plugin data path may not traverse symlinks")
+    if data_dir.exists() and not data_dir.is_dir():
+        raise PermissionError("plugin data path must be a directory")
+    ledger_path = data_dir / "ledger.sqlite"
+    if ledger_path.is_symlink():
+        raise PermissionError("ledger.sqlite may not be a symlink")
+    if ledger_path.exists() and not ledger_path.is_file():
+        raise PermissionError("ledger.sqlite must be a regular file")
+    return data_dir, ledger_path
 
 
 def _load_config(project_root: Path) -> tuple[RuntimeConfig | None, str | None]:
@@ -510,7 +545,7 @@ def handle(
 ) -> dict[str, object] | None:
     env = os.environ if env is None else env
     try:
-        project_root = _project_root(data, env)
+        project_root, stable_project_root = _project_root(data, env)
     except (OSError, PermissionError, ValueError) as exc:
         return _deny(f"DreamTeam project root is invalid: {exc}")
     cwd = Path(str(data.get("cwd") or project_root)).resolve()
@@ -519,8 +554,10 @@ def handle(
     except ValueError:
         return _deny("working directory resolves outside project root")
 
-    data_dir = Path(env.get("CLAUDE_PLUGIN_DATA", str(project_root / ".dreamteam")))
-    database = data_dir / "ledger.sqlite"
+    try:
+        data_dir, database = _plugin_data_paths(project_root, env)
+    except (OSError, PermissionError, ValueError) as exc:
+        return _deny(f"DreamTeam plugin data path is invalid: {exc}")
     run_hint = str(env.get("DREAMTEAM_RUN_ID") or data.get("session_id") or "")
     try:
         config, config_hash = _load_config(project_root)
@@ -528,7 +565,10 @@ def handle(
         return _deny(f"DreamTeam configuration is invalid: {exc}")
     if config is None:
         if database.is_file() and run_hint:
-            ledger = RunLedger(database)
+            try:
+                ledger = RunLedger(database)
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                return _deny(f"DreamTeam ledger is unavailable: {exc}")
             try:
                 if ledger.config_hash_for_run(run_hint) is not None:
                     return _deny("DreamTeam configuration disappeared during the active run")
@@ -539,16 +579,25 @@ def handle(
         return None
     if config.telemetry.ledger != "sqlite":
         return _deny("enabled DreamTeam telemetry requires the SQLite ledger")
-
-    data_dir.mkdir(parents=True, exist_ok=True)
-    ledger = RunLedger(database)
+    strict = config.telemetry.enforcement == "strict"
+    if strict and not stable_project_root:
+        return _deny(
+            "strict mode requires CLAUDE_PROJECT_DIR or an explicit project_dir; cwd fallback is not trusted"
+        )
+    try:
+        data_dir, database = _plugin_data_paths(project_root, env)
+        data_dir.mkdir(parents=True, exist_ok=True)
+        if data_dir.is_symlink() or database.is_symlink():
+            raise PermissionError("plugin data and ledger paths must remain regular non-symlink paths")
+        ledger = RunLedger(database)
+    except (OSError, PermissionError, sqlite3.Error, ValueError) as exc:
+        return _deny(f"DreamTeam ledger initialization failed: {exc}")
     try:
         event_name = str(data.get("hook_event_name") or "")
         tool_name = str(data.get("tool_name") or "")
         tool_input = data.get("tool_input") or {}
         if not isinstance(tool_input, dict):
             return _deny("tool_input must be an object")
-        strict = config.telemetry.enforcement == "strict"
         try:
             run_id, agent_id = _identity(data, env, strict=strict)
         except ValueError as exc:
@@ -556,6 +605,21 @@ def handle(
 
         if config_hash is None or not ledger.bind_config(run_id, config_hash):
             message = "DreamTeam configuration changed during the active run"
+            return _deny(message) if strict else _context(event_name or "PreToolUse", message)
+        try:
+            price_book = PriceBook(config.pricing_as_of)
+            context_bound = ledger.bind_run_context(
+                run_id,
+                effective_config_hash=config.effective_hash,
+                runtime_version=__version__,
+                pricing_catalog_id=price_book.catalog_id,
+                pricing_catalog_hash=price_book.catalog_hash,
+                model_catalog_id=MODEL_CATALOG_ID,
+            )
+        except (TypeError, ValueError, RuntimeError) as exc:
+            return _deny(f"DreamTeam reproducibility context is invalid: {exc}")
+        if not context_bound:
+            message = "DreamTeam effective configuration or pricing context changed during the run"
             return _deny(message) if strict else _context(event_name or "PreToolUse", message)
 
         if phase == "pre":
@@ -758,6 +822,8 @@ def handle(
                 strict,
             )
         return None
+    except (LedgerConflictError, sqlite3.Error, OSError) as exc:
+        return _deny(f"DreamTeam ledger integrity failure: {exc}")
     finally:
         ledger.close()
 

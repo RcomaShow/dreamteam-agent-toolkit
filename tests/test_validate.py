@@ -25,7 +25,7 @@ class StructureTests(unittest.TestCase):
 
     def test_plugin_version_hooks_and_operations(self):
         manifest = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text())
-        self.assertEqual(manifest["version"], "0.4.1")
+        self.assertEqual(manifest["version"], "0.4.5")
         self.assertFalse(manifest["defaultEnabled"])
         self.assertTrue((PLUGIN / "hooks/hooks.json").is_file())
         self.assertTrue((PLUGIN / "lib/dreamteam/routing.py").is_file())
@@ -37,7 +37,7 @@ class StructureTests(unittest.TestCase):
 
     def test_standard_package_metadata(self):
         metadata = tomllib.loads((ROOT / "pyproject.toml").read_text())
-        self.assertEqual(metadata["project"]["version"], "0.4.1")
+        self.assertEqual(metadata["project"]["version"], "0.4.5")
         self.assertEqual(metadata["project"]["dependencies"], [])
         self.assertEqual(metadata["project"]["requires-python"], ">=3.11")
 

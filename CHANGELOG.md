@@ -2,6 +2,56 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.5] - 2026-07-22
+
+### Added
+
+- Versioned closed JSON Schemas for doctor and status machine-readable output.
+- Deterministic CycloneDX 1.5 SBOM included in release checksums.
+- Explicit 0.4 maintenance policy, threat boundary, and known limitations.
+
+### Changed
+
+- The 0.4 line is feature-frozen after this stability candidate; new capabilities move to 0.5.
+
+## [0.4.4] - 2026-07-22
+
+### Added
+
+- Semantic validation of direct and DreamTeam benchmark arm model composition.
+- Seeded adversarial protocol round-trip tests and explicit rejection of Unicode line separators.
+- Python 3.11, 3.12, and 3.13 CI coverage plus isolated wheel installation smoke testing.
+
+### Fixed
+
+- CRLF records are normalized without retaining carriage returns in protocol fields.
+
+## [0.4.3] - 2026-07-22
+
+### Added
+
+- Explicit immutable pricing snapshots with content hashes and rejection of unknown dates.
+- Fully materialized effective-config hashing independent of omitted profile defaults.
+- Ledger schema version 1 and immutable runtime, pricing, model-catalog, and effective-config run context.
+- Doctor diagnostics for pinned pricing identity.
+
+### Compatibility
+
+- Existing schema-version-zero 0.4 ledgers are upgraded in place by creating additive tables and setting user_version=1.
+
+## [0.4.2] - 2026-07-22
+
+### Fixed
+
+- Terminal checkpoint state and result hashes are now immutable and transactionally idempotent.
+- Pending-read and tool-event idempotency keys reject conflicting metadata instead of silently replacing or ignoring it.
+- Strict hooks reject cwd-derived project roots and symlinked plugin-data or ledger paths.
+- Ledger and filesystem integrity failures are converted into structured deny decisions.
+
+### Compatibility
+
+- Config v2, DCP/2, CHP/2, routes, models, and benchmark formats are unchanged.
+
 ## [0.4.1] - 2026-07-21
 
 ### Added

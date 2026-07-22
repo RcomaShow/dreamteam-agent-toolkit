@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the exact DreamTeam 0.4.1 plugin ZIP in an isolated directory."""
+"""Smoke-test the exact DreamTeam 0.4.5 plugin ZIP in an isolated directory."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ import sys
 import tempfile
 import zipfile
 
-EXPECTED_VERSION = "0.4.1"
+EXPECTED_VERSION = "0.4.5"
 
 
 def safe_member(name: str) -> bool:
@@ -59,6 +59,15 @@ def main() -> int:
         )
         if manifest.get("version") != EXPECTED_VERSION:
             raise ValueError("unexpected plugin version")
+        repository_root = args.archive.resolve().parent
+        sbom_path = repository_root / "SBOM.cdx.json"
+        if sbom_path.is_file():
+            sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
+            if sbom.get("bomFormat") != "CycloneDX" or sbom.get("specVersion") != "1.5":
+                raise ValueError("release SBOM is invalid")
+            component = sbom.get("metadata", {}).get("component", {})
+            if component.get("version") != EXPECTED_VERSION:
+                raise ValueError("release SBOM version mismatch")
         for required in (
             "lib/dreamteam/config.py",
             "lib/dreamteam/routing.py",

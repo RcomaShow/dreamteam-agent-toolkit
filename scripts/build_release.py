@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import uuid
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,9 +111,47 @@ def main() -> int:
         json.dumps(source_manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    sbom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.5",
+        "serialNumber": "urn:uuid:" + str(
+            uuid.uuid5(uuid.NAMESPACE_URL, f"dreamteam:{VERSION}:{commit}")
+        ),
+        "version": 1,
+        "metadata": {
+            "component": {
+                "type": "application",
+                "name": "dreamteam-agent-toolkit",
+                "version": VERSION,
+                "bom-ref": f"pkg:github/RcomaShow/dreamteam-agent-toolkit@{commit}",
+            },
+            "properties": [
+                {"name": "dreamteam:commit", "value": commit},
+                {"name": "dreamteam:runtime-dependencies", "value": "0"},
+                {"name": "dreamteam:repository-file-count", "value": str(len(repo_manifest))},
+                {"name": "dreamteam:plugin-file-count", "value": str(len(plugin_manifest))},
+            ],
+        },
+        "components": [],
+        "dependencies": [
+            {
+                "ref": f"pkg:github/RcomaShow/dreamteam-agent-toolkit@{commit}",
+                "dependsOn": [],
+            }
+        ],
+    }
+    (DIST / "SBOM.cdx.json").write_text(
+        json.dumps(sbom, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     checksums = {
         path.name: sha256(path.read_bytes()).hexdigest()
-        for path in (repo_zip, plugin_zip, DIST / "SOURCE_MANIFEST.json")
+        for path in (
+            repo_zip,
+            plugin_zip,
+            DIST / "SOURCE_MANIFEST.json",
+            DIST / "SBOM.cdx.json",
+        )
     }
     (DIST / "SHA256SUMS.json").write_text(
         json.dumps(checksums, indent=2, sort_keys=True) + "\n",

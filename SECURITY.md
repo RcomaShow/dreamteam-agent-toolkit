@@ -20,3 +20,8 @@ The plugin installs disabled by default because its hooks affect every matched t
 Batch is a separate opt-in API lane. No provider executor, network download, credential access, dependency installation, or paid inference is triggered automatically.
 
 Report vulnerabilities privately to the repository owner with affected version, reproduction, impact, and the smallest safe mitigation. Do not place secrets in a public issue.
+
+
+## Stability-candidate threat boundary
+
+DreamTeam strict hooks are policy controls over supported Claude Code tool events, not an operating-system sandbox. A malicious host operator, compromised plugin installation, or process with direct filesystem access to the SQLite ledger remains outside the protection boundary. Historical pricing identity, effective configuration, runtime version, and model catalog are bound into run context so supported events fail closed on drift.

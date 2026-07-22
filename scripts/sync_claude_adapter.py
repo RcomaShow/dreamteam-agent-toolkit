@@ -86,7 +86,7 @@ def generate_agents() -> None:
     agent_dir.mkdir(parents=True, exist_ok=True)
     expected: set[str] = set()
     catalog = [
-        "# DreamTeam 0.4.1 Worker Catalog",
+        "# DreamTeam 0.4.5 Worker Catalog",
         "",
         "| Agent | Model | Effort | Role |",
         "|---|---|---|---|",

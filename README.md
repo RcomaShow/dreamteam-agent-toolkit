@@ -5,7 +5,7 @@
 
 **The right agent for every task. Orchestrate smarter. Spend less.**
 
-DreamTeam 0.4.1 is a constitution-guided orchestration toolkit and self-contained Claude Code plugin. It combines executable model routing, project-root enforcement, metadata-only cost accounting, bound DCP/2–CHP/2 handoffs, and claim-safe paired benchmarks.
+DreamTeam 0.4.5 is a constitution-guided orchestration toolkit and self-contained Claude Code plugin. It combines executable model routing, project-root enforcement, metadata-only cost accounting, bound DCP/2–CHP/2 handoffs, and claim-safe paired benchmarks.
 
 ## Five-minute first run
 
@@ -104,7 +104,7 @@ The plugin installs disabled by default because it contributes enforcement hooks
 make check
 python scripts/measure.py
 python scripts/build_release.py
-python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.1.zip
+python scripts/smoke_plugin_artifact.py dist/dreamteam-claude-code-plugin-0.4.5.zip
 ```
 
 The expanded commands are documented in [`PUBLISHING.md`](PUBLISHING.md). The implementation scope and architectural decisions for this release are recorded in [`docs/v0.4.1-implementation-plan.md`](docs/v0.4.1-implementation-plan.md).

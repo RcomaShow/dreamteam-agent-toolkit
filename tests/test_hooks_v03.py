@@ -29,7 +29,7 @@ class HookTests(unittest.TestCase):
         (self.root / "dreamteam.config.json").write_text(json.dumps(config))
         self.data = self.root / "plugin-data"
         self.hook = load_hook()
-        self.env = {"CLAUDE_PLUGIN_DATA": str(self.data), "DREAMTEAM_RUN_ID": "r"}
+        self.env = {"CLAUDE_PLUGIN_DATA": str(self.data), "CLAUDE_PROJECT_DIR": str(self.root), "DREAMTEAM_RUN_ID": "r"}
 
     def tearDown(self):
         self.temp.cleanup()

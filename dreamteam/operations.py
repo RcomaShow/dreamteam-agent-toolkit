@@ -15,6 +15,7 @@ from typing import Any, Sequence, TextIO
 
 from . import __version__
 from .config import Profile, RuntimeConfig, Topology
+from .pricing import PriceBook
 
 CONFIG_FILENAME = "dreamteam.config.json"
 DEFAULT_PRICING_AS_OF = date(2026, 7, 17)
@@ -269,11 +270,19 @@ def doctor(
             if not isinstance(data, dict):
                 raise TypeError("configuration root must be an object")
             config = RuntimeConfig.from_mapping(data)
+            price_book = PriceBook(config.pricing_as_of)
             diagnostics.append(
                 Diagnostic(
                     "info",
                     "CONFIG_VALID",
                     "The project configuration passes strict schema validation.",
+                )
+            )
+            diagnostics.append(
+                Diagnostic(
+                    "info",
+                    "PRICING_CATALOG_PINNED",
+                    f"Pricing {price_book.catalog_id} is pinned at {price_book.catalog_hash}.",
                 )
             )
         except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
