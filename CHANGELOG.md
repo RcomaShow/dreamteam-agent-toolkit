@@ -2,6 +2,12 @@
 
 All notable changes follow semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- Separate standalone Claude Code adapter for project- and user-scoped installation, deterministic command and path projection, optional managed hooks, integrity diagnostics, and reversible uninstall.
+
 ## [0.4.5] - 2026-07-22
 
 ### Added

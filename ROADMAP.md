@@ -16,6 +16,7 @@
 
 ## 0.5 — Evaluation and Context Engineering
 
+- Standalone Claude Code installation adapter for project and user scopes.
 - Representative Java, Python, TypeScript, infrastructure, migration, and test-generation suites.
 - Cold/warm-cache cohorts, randomized order, confidence intervals, and bucket-specific calibration.
 - Raw paired benchmark publication, coverage reporting, and property-based protocol tests.
