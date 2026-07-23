@@ -1,0 +1,10 @@
+{
+  "name": "dreamteam-standalone",
+  "schemaVersion": 1,
+  "source": "../plugins/dreamteam",
+  "entrypoint": "installer.py",
+  "scopes": [
+    "project",
+    "user"
+  ]
+}
