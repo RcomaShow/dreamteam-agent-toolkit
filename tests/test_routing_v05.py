@@ -62,6 +62,18 @@ class RoutingV05Tests(unittest.TestCase):
         self.assertEqual(result.selected_route, Route.MAIN_DIRECT)
         self.assertIn("LEAN_EXECUTIVE_USAGE_REQUIRED", result.reason_codes)
 
+    def test_lean_rejects_non_sonnet_executive_model(self):
+        mapping = cfg().effective_mapping()
+        mapping["models"]["executive"] = "opus"
+        invalid_topology = RuntimeConfig.from_mapping(mapping)
+        result = choose_route_v05(
+            discovery(executive_usage=TokenUsage(input_tokens=10_000, output_tokens=500)),
+            config=invalid_topology,
+        )
+        self.assertEqual(result.selected_route, Route.BLOCKED)
+        self.assertEqual(result.reason_codes, ("LEAN_EXECUTIVE_MODEL_MUST_BE_SONNET",))
+        self.assertFalse(result.cost_gate_pass)
+
     def test_lean_executive_overhead_is_accounted(self):
         result = choose_route_v05(
             discovery(executive_usage=TokenUsage(input_tokens=10_000, output_tokens=500)),
