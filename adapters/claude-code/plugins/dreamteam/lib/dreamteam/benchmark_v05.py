@@ -58,6 +58,8 @@ def _distribution(values: list[Decimal]) -> tuple[Decimal, Decimal, Decimal]:
 def _validate_v05_pair_semantics(pair: PairResult) -> None:
     """Reject 0.4-compatible benchmark rows that omit 0.5 whole-tree overhead."""
     dreamteam = pair.dreamteam
+    if not dreamteam.adapter_version.startswith("0.5."):
+        raise ValueError("0.5 benchmark requires adapter_version 0.5.x")
     if dreamteam.topology != "lean":
         return
     if dreamteam.route not in {"HAIKU_DISCOVERY", "HAIKU_EXECUTE"}:
@@ -78,9 +80,10 @@ def _validate_v05_pair_semantics(pair: PairResult) -> None:
 def _pair_token_metrics(pair: PairResult) -> tuple[Decimal, Decimal]:
     direct_total = Decimal(pair.direct.main_tokens + pair.direct.worker_tokens)
     dreamteam_total = Decimal(pair.dreamteam.main_tokens + pair.dreamteam.worker_tokens)
-    total_savings = savings_ratio(direct_total, dreamteam_total)
-    main_savings = savings_ratio(pair.direct.main_tokens, pair.dreamteam.main_tokens)
-    return total_savings, main_savings
+    return (
+        savings_ratio(direct_total, dreamteam_total),
+        savings_ratio(pair.direct.main_tokens, pair.dreamteam.main_tokens),
+    )
 
 
 def summarize_v05(
@@ -96,7 +99,11 @@ def summarize_v05(
         ("minimum_total_token_savings", minimum_total_token_savings),
         ("minimum_main_token_savings", minimum_main_token_savings),
     ):
-        if not isinstance(value, Decimal) or not value.is_finite() or not Decimal("0") <= value <= Decimal("1"):
+        if (
+            not isinstance(value, Decimal)
+            or not value.is_finite()
+            or not Decimal("0") <= value <= Decimal("1")
+        ):
             raise ValueError(f"{name} must be a finite Decimal between 0 and 1")
     if type(minimum_samples) is not int or minimum_samples < 1:
         raise ValueError("minimum_samples must be a positive integer")
@@ -110,6 +117,16 @@ def summarize_v05(
         minimum_samples=minimum_samples,
     )
     normalized = {} if normalized_measurements is None else dict(normalized_measurements)
+    expected_run_ids = {
+        run_id
+        for pair in items
+        for run_id in (pair.direct.run_id, pair.dreamteam.run_id)
+    }
+    unknown_run_ids = set(normalized) - expected_run_ids
+    if unknown_run_ids:
+        raise ValueError(
+            f"normalized measurements contain unknown run ids: {sorted(unknown_run_ids)}"
+        )
 
     quality_pairs = [pair for pair in items if pair.quality_parity]
     total_values: list[Decimal] = []
@@ -132,9 +149,7 @@ def summarize_v05(
             continue
         if direct_measurement.handoff_tokens != 0:
             raise ValueError("direct benchmark arm may not report DreamTeam handoff tokens")
-        dreamteam_total = Decimal(
-            pair.dreamteam.main_tokens + pair.dreamteam.worker_tokens
-        )
+        dreamteam_total = Decimal(pair.dreamteam.main_tokens + pair.dreamteam.worker_tokens)
         if Decimal(dreamteam_measurement.handoff_tokens) > dreamteam_total:
             raise ValueError("DreamTeam handoff tokens cannot exceed total active tokens")
         if direct_measurement.normalized_payload_bytes > 0:
