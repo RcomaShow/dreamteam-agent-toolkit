@@ -1,5 +1,5 @@
 PYTHON ?= python3
-PLUGIN_ARCHIVE := dist/dreamteam-claude-code-plugin-0.4.5.zip
+PLUGIN_ARCHIVE := dist/dreamteam-claude-code-plugin-0.5.0.zip
 
 .PHONY: sync validate test compile check measure build smoke release
 
@@ -13,7 +13,7 @@ test:
 	$(PYTHON) -m unittest discover -s tests -v
 
 compile:
-	$(PYTHON) -m compileall dreamteam adapters/claude-code/plugins/dreamteam
+	$(PYTHON) -m compileall dreamteam adapters/claude-code/plugins/dreamteam adapters/codex scripts/install_codex_adapter.py
 
 check: sync
 	git diff --exit-code

@@ -1,4 +1,4 @@
-# DreamTeam for Claude Code 0.4.5
+# DreamTeam for Claude Code 0.5.0
 
 Development:
 
@@ -33,4 +33,8 @@ Operational commands:
 /dreamteam:measure <results.json>
 ```
 
+0.5 routes `/dreamteam:run` through measurement-first accounting: the Lean root Sonnet executive must be forecast explicitly before delegation, cost and token savings are reported separately, and token gates remain shadow-only unless explicitly enabled.
+
 The plugin installs disabled by default because it contributes enforcement hooks. The root session remains the only physical dispatcher; thirteen Haiku workers and three Sonnet roles receive bounded contracts, while Opus is used by the executive session in `opus-sonnet` and `frontier` topologies. In Opus-Sonnet, the bounded implementer and independent reviewer are different Sonnet agent identities. Run `/dreamteam:doctor` before enabling strict telemetry.
+
+Strict budget enforcement reserves forecast cost before Agent dispatch. Until authoritative provider usage is wired into reconciliation, this is not a provider-side hard spending cap.

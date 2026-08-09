@@ -2,6 +2,37 @@
 
 All notable changes follow semantic versioning.
 
+## [0.5.0] - 2026-08-09
+
+### Added
+
+- Measurement-first efficiency metrics that separate API-equivalent USD, total provider tokens, root/main-model tokens, normalized payload bytes, and handoff overhead.
+- Additive `routing_v05` overlay with explicit Lean root-executive accounting and shadow token gates.
+- Token-aware paired benchmark summaries with independent cost, token, normalized-payload, and combined efficiency claim gates.
+- Codex-native project `AGENTS.md`, explicit DreamTeam skill, and safe project/user adapter installer.
+- Focused tests for cheaper-but-token-heavier routes, Lean executive overhead, token gate enforcement, normalized payload claims, and Codex installation safety.
+- 0.5 design record defining claim boundaries, provider-budget limitations, and benchmark exit criteria.
+
+### Changed
+
+- Claude `/dreamteam:run` now routes through 0.5 measurement-first accounting while keeping `dreamteam.routing.choose_route` as the 0.4 compatibility baseline.
+- Lean delegated candidates require an explicit root Sonnet executive forecast by default; the executive is no longer treated as zero-cost overhead.
+- Token thresholds are reported in shadow mode by default and require explicit opt-in before they can reject delegation.
+- Benchmark publication distinguishes cost savings from token savings instead of allowing a cheaper model to imply token efficiency.
+- Release and validation tooling now include the Codex adapter and 0.5 runtime modules.
+
+### Compatibility
+
+- Config version 2 remains unchanged.
+- DCP/2, CHP/2, route identifiers, existing worker identifiers, and the 0.4 compatibility router remain available.
+- The Python runtime continues to have zero third-party runtime dependencies.
+
+### Claim policy
+
+- No universal cost or token savings claim is made by 0.5.0.
+- `empirical_claim_allowed` remains false for routing forecasts; representative paired provider runs are required for empirical claims.
+- The strict ledger currently enforces forecast reservations, not an authoritative provider-side spending hard cap, until actual usage callbacks are integrated.
+
 ## [0.4.5] - 2026-07-22
 
 ### Added

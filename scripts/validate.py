@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate DreamTeam 0.4.5 repository, generated adapter, and security invariants."""
+"""Validate DreamTeam 0.5.0 repository, generated adapters, and security invariants."""
 from __future__ import annotations
 
 import importlib
@@ -19,7 +19,7 @@ ALLOWED_AGENT_FIELDS = {
 }
 FORBIDDEN_AGENT_FIELDS = {"hooks", "mcpServers", "permissionMode"}
 ALLOWED_EFFORT = {"low", "medium", "high", "xhigh", "max"}
-EXPECTED_VERSION = "0.4.5"
+EXPECTED_VERSION = "0.5.0"
 
 
 def frontmatter(path: Path) -> dict[str, str]:
@@ -52,6 +52,7 @@ def main() -> int:
         ROOT / "docs/v0.4.1-implementation-plan.md",
         ROOT / "docs/v0.4-stabilization-plan.md",
         ROOT / "docs/v0.4.5-stability-candidate.md",
+        ROOT / "docs/v0.5-design.md",
         PLUGIN / ".claude-plugin/plugin.json",
         PLUGIN / "hooks/hooks.json",
         PLUGIN / "scripts/dreamteam_init.py",
@@ -62,6 +63,9 @@ def main() -> int:
         PLUGIN / "scripts/dreamteam_ledger_hook.py",
         PLUGIN / "lib/dreamteam/config.py",
         PLUGIN / "lib/dreamteam/routing.py",
+        PLUGIN / "lib/dreamteam/routing_v05.py",
+        PLUGIN / "lib/dreamteam/measurement.py",
+        PLUGIN / "lib/dreamteam/benchmark_v05.py",
         PLUGIN / "lib/dreamteam/protocol.py",
         PLUGIN / "lib/dreamteam/operations.py",
         PLUGIN / "lib/dreamteam/py.typed",
@@ -70,15 +74,21 @@ def main() -> int:
         PLUGIN / "skills/status/SKILL.md",
         PLUGIN / "skills/run/SKILL.md",
         PLUGIN / "skills/review/SKILL.md",
+        ROOT / "adapters/codex/AGENTS.md",
+        ROOT / "adapters/codex/skills/dreamteam-run/SKILL.md",
+        ROOT / "scripts/install_codex_adapter.py",
         ROOT / "core/schemas/dreamteam-config.schema.json",
         ROOT / "core/schemas/dreamteam-doctor-report.schema.json",
         ROOT / "core/schemas/dreamteam-status-report.schema.json",
         ROOT / "dreamteam/config.py",
         ROOT / "dreamteam/routing.py",
+        ROOT / "dreamteam/routing_v05.py",
+        ROOT / "dreamteam/measurement.py",
         ROOT / "dreamteam/protocol.py",
         ROOT / "dreamteam/ledger.py",
         ROOT / "dreamteam/anchors.py",
         ROOT / "dreamteam/benchmark.py",
+        ROOT / "dreamteam/benchmark_v05.py",
         ROOT / "dreamteam/operations.py",
         ROOT / "dreamteam/py.typed",
         ROOT / "scripts/measure.py",
@@ -235,8 +245,9 @@ def main() -> int:
 
     for module in (
         "dreamteam.pricing", "dreamteam.config", "dreamteam.routing",
-        "dreamteam.anchors", "dreamteam.ledger", "dreamteam.protocol",
-        "dreamteam.benchmark", "dreamteam.operations",
+        "dreamteam.routing_v05", "dreamteam.measurement", "dreamteam.anchors",
+        "dreamteam.ledger", "dreamteam.protocol", "dreamteam.benchmark",
+        "dreamteam.benchmark_v05", "dreamteam.operations",
     ):
         try:
             importlib.import_module(module)
@@ -263,7 +274,7 @@ def main() -> int:
     if "Opus-Sonnet" not in routing:
         errors.append("generated routing reference lacks Opus-Sonnet")
     catalog = (PLUGIN / "skills/run/references/worker-catalog.md").read_text(encoding="utf-8")
-    if not catalog.startswith("# DreamTeam 0.4.5 Worker Catalog\n"):
+    if not catalog.startswith("# DreamTeam 0.5.0 Worker Catalog\n"):
         errors.append("generated worker catalog version is stale")
 
     route_wrapper = (PLUGIN / "scripts/dreamteam_route.py").read_text(encoding="utf-8")
@@ -271,6 +282,15 @@ def main() -> int:
         errors.append("route wrapper does not expose read-only doctor/status operations")
     if '"init"' in route_wrapper.split("_OPERATION_COMMANDS", 1)[1].split("\n", 1)[0]:
         errors.append("route wrapper must not expose mutating init through the trusted wrapper")
+    if "choose_route_v05" not in route_wrapper or "--enforce-token-gates" not in route_wrapper:
+        errors.append("route wrapper does not expose the 0.5 measurement-first router")
+
+    codex_agents = (ROOT / "adapters/codex/AGENTS.md").read_text(encoding="utf-8")
+    codex_skill = (ROOT / "adapters/codex/skills/dreamteam-run/SKILL.md").read_text(encoding="utf-8")
+    if "DreamTeam 0.5" not in codex_agents or "measurement" not in codex_agents.lower():
+        errors.append("Codex AGENTS.md is not the 0.5 measurement adapter")
+    if "name: dreamteam-run" not in codex_skill:
+        errors.append("Codex DreamTeam skill metadata is invalid")
 
     for template in (ROOT / "core/templates").glob("*.txt"):
         content = template.read_text(encoding="utf-8")
