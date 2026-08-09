@@ -38,6 +38,7 @@ def row(
     output_tokens=None,
     pair="p",
     include_executive=True,
+    adapter_version="0.5.0",
 ):
     direct = arm == "direct"
     input_tokens = (100_000 if direct else 20_000) if input_tokens is None else input_tokens
@@ -53,10 +54,7 @@ def row(
         main_tokens = 0
         worker_tokens = input_tokens + output_tokens
         if include_executive:
-            model_usage.insert(
-                0,
-                usage("sonnet", EXECUTIVE_INPUT, EXECUTIVE_OUTPUT),
-            )
+            model_usage.insert(0, usage("sonnet", EXECUTIVE_INPUT, EXECUTIVE_OUTPUT))
             total_cost += cost_value("sonnet", EXECUTIVE_INPUT, EXECUTIVE_OUTPUT)
             main_tokens = EXECUTIVE_INPUT + EXECUTIVE_OUTPUT
     return {
@@ -89,7 +87,7 @@ def row(
         "failed_attempts": 0,
         "elapsed_seconds": 1.0,
         "pricing_catalog_id": "anthropic-api-2026-07-17",
-        "adapter_version": "0.5.0",
+        "adapter_version": adapter_version,
         "config_hash": "cfg",
         "environment_id": "ubuntu-python312",
         "timeout_seconds": 60.0,
@@ -97,16 +95,23 @@ def row(
     }
 
 
-def pairs(dream_input=20_000, dream_output=1_000, *, include_executive=True):
+def pairs(
+    dream_input=20_000,
+    dream_output=1_000,
+    *,
+    include_executive=True,
+    adapter_version="0.5.0",
+):
     return pair_results(
         load_results(
             [
-                row("direct"),
+                row("direct", adapter_version=adapter_version),
                 row(
                     "dreamteam",
                     input_tokens=dream_input,
                     output_tokens=dream_output,
                     include_executive=include_executive,
+                    adapter_version=adapter_version,
                 ),
             ]
         )
@@ -145,12 +150,13 @@ class BenchmarkV05Tests(unittest.TestCase):
         self.assertGreater(summary["median_total_token_savings_ratio"], 0)
         self.assertGreater(summary["median_main_token_savings_ratio"], 0)
 
+    def test_v05_summary_rejects_v04_adapter_results(self):
+        with self.assertRaisesRegex(ValueError, "adapter_version 0.5"):
+            summarize_v05(pairs(adapter_version="0.4.5"), minimum_samples=1)
+
     def test_lean_benchmark_rejects_omitted_executive_usage(self):
         with self.assertRaisesRegex(ValueError, "explicit Sonnet executive"):
-            summarize_v05(
-                pairs(include_executive=False),
-                minimum_samples=1,
-            )
+            summarize_v05(pairs(include_executive=False), minimum_samples=1)
 
     def test_cheaper_but_token_heavier_pair_cannot_claim_token_efficiency(self):
         summary = summarize_v05(
@@ -167,6 +173,12 @@ class BenchmarkV05Tests(unittest.TestCase):
         self.assertTrue(summary["token_claim_allowed"])
         self.assertFalse(summary["payload_claim_allowed"])
         self.assertFalse(summary["normalized_measurement_complete"])
+
+    def test_normalized_sidecar_rejects_unknown_run_ids(self):
+        sidecar = measurements()
+        sidecar["other-run"] = type(next(iter(sidecar.values())))("other-run", 1, 0)
+        with self.assertRaisesRegex(ValueError, "unknown run ids"):
+            summarize_v05(pairs(), normalized_measurements=sidecar, minimum_samples=1)
 
     def test_direct_arm_cannot_report_dreamteam_handoff_tokens(self):
         with self.assertRaises(ValueError):
