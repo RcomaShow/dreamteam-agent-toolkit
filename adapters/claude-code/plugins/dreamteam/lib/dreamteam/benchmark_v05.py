@@ -107,6 +107,13 @@ def summarize_v05(
         if direct_measurement is None or dreamteam_measurement is None:
             normalized_complete = False
             continue
+        if direct_measurement.handoff_tokens != 0:
+            raise ValueError("direct benchmark arm may not report DreamTeam handoff tokens")
+        dreamteam_total = Decimal(
+            pair.dreamteam.main_tokens + pair.dreamteam.worker_tokens
+        )
+        if Decimal(dreamteam_measurement.handoff_tokens) > dreamteam_total:
+            raise ValueError("DreamTeam handoff tokens cannot exceed total active tokens")
         if direct_measurement.normalized_payload_bytes > 0:
             payload_values.append(
                 savings_ratio(
@@ -114,9 +121,6 @@ def summarize_v05(
                     dreamteam_measurement.normalized_payload_bytes,
                 )
             )
-        dreamteam_total = Decimal(
-            pair.dreamteam.main_tokens + pair.dreamteam.worker_tokens
-        )
         handoff_values.append(
             Decimal("0")
             if dreamteam_total == 0
