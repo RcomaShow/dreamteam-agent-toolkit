@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/install_codex_adapter.py"
@@ -25,6 +26,7 @@ class CodexAdapterV05Tests(unittest.TestCase):
                 target.read_bytes(),
                 (ROOT / "adapters/codex/AGENTS.md").read_bytes(),
             )
+            self.assertEqual(list(root.glob(".AGENTS.md.dreamteam-*")), [])
             target.write_text("user instructions\n", encoding="utf-8")
             with self.assertRaises(FileExistsError):
                 module.install_project(root)
@@ -38,6 +40,31 @@ class CodexAdapterV05Tests(unittest.TestCase):
             target.write_text("old\n", encoding="utf-8")
             module.install_project(root, force=True)
             self.assertIn("DreamTeam 0.5", target.read_text(encoding="utf-8"))
+
+    def test_symlink_target_is_rejected_without_touching_target(self):
+        module = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outside = root / "outside.md"
+            outside.write_text("keep\n", encoding="utf-8")
+            link = root / "AGENTS.md"
+            try:
+                link.symlink_to(outside)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are unavailable")
+            with self.assertRaises(PermissionError):
+                module.install_project(root, force=True)
+            self.assertEqual(outside.read_text(encoding="utf-8"), "keep\n")
+
+    def test_target_appearing_during_publish_fails_closed(self):
+        module = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch.object(module.os, "link", side_effect=FileExistsError):
+                with self.assertRaises(FileExistsError):
+                    module.install_project(root)
+            self.assertFalse((root / "AGENTS.md").exists())
+            self.assertEqual(list(root.glob(".AGENTS.md.dreamteam-*")), [])
 
     def test_user_skill_installs_under_codex_home(self):
         module = load_installer()
