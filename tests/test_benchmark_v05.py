@@ -6,6 +6,9 @@ from dreamteam.benchmark import load_results, pair_results
 from dreamteam.benchmark_v05 import load_normalized_measurements, summarize_v05
 from dreamteam.pricing import PriceBook, TokenUsage, estimate_cost
 
+EXECUTIVE_INPUT = 10_000
+EXECUTIVE_OUTPUT = 500
+
 
 def usage(model, input_tokens, output_tokens):
     return {
@@ -20,21 +23,42 @@ def usage(model, input_tokens, output_tokens):
     }
 
 
-def cost(model, input_tokens, output_tokens):
-    return str(
-        estimate_cost(
-            model,
-            TokenUsage(input_tokens=input_tokens, output_tokens=output_tokens),
-            price_book=PriceBook(date(2026, 7, 17)),
-        ).total_usd
-    )
+def cost_value(model, input_tokens, output_tokens):
+    return estimate_cost(
+        model,
+        TokenUsage(input_tokens=input_tokens, output_tokens=output_tokens),
+        price_book=PriceBook(date(2026, 7, 17)),
+    ).total_usd
 
 
-def row(arm, *, input_tokens=None, output_tokens=None, pair="p"):
+def row(
+    arm,
+    *,
+    input_tokens=None,
+    output_tokens=None,
+    pair="p",
+    include_executive=True,
+):
     direct = arm == "direct"
-    model = "sonnet" if direct else "haiku"
     input_tokens = (100_000 if direct else 20_000) if input_tokens is None else input_tokens
     output_tokens = (10_000 if direct else 1_000) if output_tokens is None else output_tokens
+    if direct:
+        model_usage = [usage("sonnet", input_tokens, output_tokens)]
+        total_cost = cost_value("sonnet", input_tokens, output_tokens)
+        main_tokens = input_tokens + output_tokens
+        worker_tokens = 0
+    else:
+        model_usage = [usage("haiku", input_tokens, output_tokens)]
+        total_cost = cost_value("haiku", input_tokens, output_tokens)
+        main_tokens = 0
+        worker_tokens = input_tokens + output_tokens
+        if include_executive:
+            model_usage.insert(
+                0,
+                usage("sonnet", EXECUTIVE_INPUT, EXECUTIVE_OUTPUT),
+            )
+            total_cost += cost_value("sonnet", EXECUTIVE_INPUT, EXECUTIVE_OUTPUT)
+            main_tokens = EXECUTIVE_INPUT + EXECUTIVE_OUTPUT
     return {
         "run_id": f"{pair}-{arm}",
         "pair_id": pair,
@@ -53,10 +77,10 @@ def row(arm, *, input_tokens=None, output_tokens=None, pair="p"):
         "arm_order": 0 if direct else 1,
         "quality_oracle_id": "oracle",
         "quality_pass": True,
-        "billed_usd": cost(model, input_tokens, output_tokens),
-        "api_equivalent_usd": cost(model, input_tokens, output_tokens),
-        "main_tokens": input_tokens + output_tokens if direct else 0,
-        "worker_tokens": 0 if direct else input_tokens + output_tokens,
+        "billed_usd": str(total_cost),
+        "api_equivalent_usd": str(total_cost),
+        "main_tokens": main_tokens,
+        "worker_tokens": worker_tokens,
         "cache_read_tokens": 0,
         "cache_write_tokens": 0,
         "reread_bytes": 0,
@@ -69,16 +93,21 @@ def row(arm, *, input_tokens=None, output_tokens=None, pair="p"):
         "config_hash": "cfg",
         "environment_id": "ubuntu-python312",
         "timeout_seconds": 60.0,
-        "model_usage": [usage(model, input_tokens, output_tokens)],
+        "model_usage": model_usage,
     }
 
 
-def pairs(dream_input=20_000, dream_output=1_000):
+def pairs(dream_input=20_000, dream_output=1_000, *, include_executive=True):
     return pair_results(
         load_results(
             [
                 row("direct"),
-                row("dreamteam", input_tokens=dream_input, output_tokens=dream_output),
+                row(
+                    "dreamteam",
+                    input_tokens=dream_input,
+                    output_tokens=dream_output,
+                    include_executive=include_executive,
+                ),
             ]
         )
     )
@@ -116,6 +145,13 @@ class BenchmarkV05Tests(unittest.TestCase):
         self.assertGreater(summary["median_total_token_savings_ratio"], 0)
         self.assertGreater(summary["median_main_token_savings_ratio"], 0)
 
+    def test_lean_benchmark_rejects_omitted_executive_usage(self):
+        with self.assertRaisesRegex(ValueError, "explicit Sonnet executive"):
+            summarize_v05(
+                pairs(include_executive=False),
+                minimum_samples=1,
+            )
+
     def test_cheaper_but_token_heavier_pair_cannot_claim_token_efficiency(self):
         summary = summarize_v05(
             pairs(dream_input=120_000, dream_output=1_000),
@@ -141,10 +177,11 @@ class BenchmarkV05Tests(unittest.TestCase):
             )
 
     def test_handoff_tokens_cannot_exceed_dreamteam_total(self):
+        dreamteam_total = EXECUTIVE_INPUT + EXECUTIVE_OUTPUT + 20_000 + 1_000
         with self.assertRaises(ValueError):
             summarize_v05(
                 pairs(),
-                normalized_measurements=measurements(dream_handoff=21_001),
+                normalized_measurements=measurements(dream_handoff=dreamteam_total + 1),
                 minimum_samples=1,
             )
 
