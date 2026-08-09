@@ -84,17 +84,28 @@ def pairs(dream_input=20_000, dream_output=1_000):
     )
 
 
+def measurements(*, direct_handoff=0, dream_handoff=1_000):
+    return load_normalized_measurements(
+        [
+            {
+                "run_id": "p-direct",
+                "normalized_payload_bytes": 10_000,
+                "handoff_tokens": direct_handoff,
+            },
+            {
+                "run_id": "p-dreamteam",
+                "normalized_payload_bytes": 5_000,
+                "handoff_tokens": dream_handoff,
+            },
+        ]
+    )
+
+
 class BenchmarkV05Tests(unittest.TestCase):
     def test_cost_token_and_payload_claims_are_separate(self):
-        measurement = load_normalized_measurements(
-            [
-                {"run_id": "p-direct", "normalized_payload_bytes": 10_000, "handoff_tokens": 0},
-                {"run_id": "p-dreamteam", "normalized_payload_bytes": 5_000, "handoff_tokens": 1_000},
-            ]
-        )
         summary = summarize_v05(
             pairs(),
-            normalized_measurements=measurement,
+            normalized_measurements=measurements(),
             minimum_samples=1,
         )
         self.assertEqual(summary["benchmark_version"], "0.5")
@@ -121,6 +132,22 @@ class BenchmarkV05Tests(unittest.TestCase):
         self.assertFalse(summary["payload_claim_allowed"])
         self.assertFalse(summary["normalized_measurement_complete"])
 
+    def test_direct_arm_cannot_report_dreamteam_handoff_tokens(self):
+        with self.assertRaises(ValueError):
+            summarize_v05(
+                pairs(),
+                normalized_measurements=measurements(direct_handoff=1),
+                minimum_samples=1,
+            )
+
+    def test_handoff_tokens_cannot_exceed_dreamteam_total(self):
+        with self.assertRaises(ValueError):
+            summarize_v05(
+                pairs(),
+                normalized_measurements=measurements(dream_handoff=21_001),
+                minimum_samples=1,
+            )
+
     def test_normalized_measurements_reject_duplicates_and_unknown_fields(self):
         duplicate = [
             {"run_id": "x", "normalized_payload_bytes": 1, "handoff_tokens": 0},
@@ -130,7 +157,14 @@ class BenchmarkV05Tests(unittest.TestCase):
             load_normalized_measurements(duplicate)
         with self.assertRaises(ValueError):
             load_normalized_measurements(
-                [{"run_id": "x", "normalized_payload_bytes": 1, "handoff_tokens": 0, "extra": 1}]
+                [
+                    {
+                        "run_id": "x",
+                        "normalized_payload_bytes": 1,
+                        "handoff_tokens": 0,
+                        "extra": 1,
+                    }
+                ]
             )
 
     def test_token_sample_gate_is_bucket_specific(self):
