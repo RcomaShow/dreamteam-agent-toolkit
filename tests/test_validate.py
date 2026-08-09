@@ -25,10 +25,13 @@ class StructureTests(unittest.TestCase):
 
     def test_plugin_version_hooks_and_operations(self):
         manifest = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text())
-        self.assertEqual(manifest["version"], "0.4.5")
+        self.assertEqual(manifest["version"], "0.5.0")
         self.assertFalse(manifest["defaultEnabled"])
         self.assertTrue((PLUGIN / "hooks/hooks.json").is_file())
         self.assertTrue((PLUGIN / "lib/dreamteam/routing.py").is_file())
+        self.assertTrue((PLUGIN / "lib/dreamteam/routing_v05.py").is_file())
+        self.assertTrue((PLUGIN / "lib/dreamteam/measurement.py").is_file())
+        self.assertTrue((PLUGIN / "lib/dreamteam/benchmark_v05.py").is_file())
         self.assertTrue((PLUGIN / "lib/dreamteam/protocol.py").is_file())
         self.assertTrue((PLUGIN / "lib/dreamteam/operations.py").is_file())
         self.assertTrue((PLUGIN / "lib/dreamteam/py.typed").is_file())
@@ -37,9 +40,14 @@ class StructureTests(unittest.TestCase):
 
     def test_standard_package_metadata(self):
         metadata = tomllib.loads((ROOT / "pyproject.toml").read_text())
-        self.assertEqual(metadata["project"]["version"], "0.4.5")
+        self.assertEqual(metadata["project"]["version"], "0.5.0")
         self.assertEqual(metadata["project"]["dependencies"], [])
         self.assertEqual(metadata["project"]["requires-python"], ">=3.11")
+
+    def test_codex_adapter_is_packaged_as_first_class_surface(self):
+        self.assertTrue((ROOT / "adapters/codex/AGENTS.md").is_file())
+        self.assertTrue((ROOT / "adapters/codex/skills/dreamteam-run/SKILL.md").is_file())
+        self.assertTrue((ROOT / "scripts/install_codex_adapter.py").is_file())
 
     def test_minimal_config_matches_generator(self):
         from dreamteam.operations import minimal_config
