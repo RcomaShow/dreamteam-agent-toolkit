@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Route requests and expose deterministic DreamTeam project operations."""
+"""Route requests through DreamTeam 0.5 measurement-first accounting."""
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
@@ -16,7 +15,8 @@ sys.path.insert(0, str(PLUGIN / "lib"))
 from dreamteam.config import RuntimeCapabilities, RuntimeConfig
 from dreamteam.operations import main as operations_main
 from dreamteam.pricing import TokenUsage
-from dreamteam.routing import Criticality, RouteRequest, TaskKind, choose_route
+from dreamteam.routing import Criticality, RouteRequest, TaskKind
+from dreamteam.routing_v05 import V05RoutingPolicy, choose_route_v05
 
 _OPERATION_COMMANDS = {"doctor", "status"}
 
@@ -57,6 +57,16 @@ def _json_decimal(data: dict[str, object], key: str, default: str = "0") -> Deci
         raise ValueError(f"{key} must be numeric") from exc
     if not result.is_finite():
         raise ValueError(f"{key} must be finite")
+    return result
+
+
+def _ratio_arg(value: str) -> Decimal:
+    try:
+        result = Decimal(value)
+    except InvalidOperation as exc:
+        raise argparse.ArgumentTypeError("ratio must be numeric") from exc
+    if not result.is_finite() or not Decimal("0") <= result <= Decimal("1"):
+        raise argparse.ArgumentTypeError("ratio must be between 0 and 1")
     return result
 
 
@@ -128,11 +138,31 @@ def route_main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--shadow", action="store_true", help="do not enforce minimum calibration samples"
     )
+    parser.add_argument(
+        "--enforce-token-gates",
+        action="store_true",
+        help="enforce the v0.5 token gates instead of reporting them in shadow mode",
+    )
+    parser.add_argument(
+        "--minimum-total-token-savings",
+        type=_ratio_arg,
+        default=Decimal("0.05"),
+    )
+    parser.add_argument(
+        "--minimum-main-token-savings",
+        type=_ratio_arg,
+        default=Decimal("0.15"),
+    )
+    parser.add_argument(
+        "--allow-unaccounted-lean-executive",
+        action="store_true",
+        help="compatibility escape hatch; not valid for economic claims",
+    )
     args = parser.parse_args(argv)
     data = json.loads(args.request.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise TypeError("request must be a JSON object")
-    decision = choose_route(
+    decision = choose_route_v05(
         parse_request(data),
         config=RuntimeConfig.from_file(args.config),
         capabilities=RuntimeCapabilities(
@@ -141,20 +171,14 @@ def route_main(argv: Sequence[str] | None = None) -> int:
             resume_available=args.resume_available,
         ),
         enforce_calibration=not args.shadow,
+        policy=V05RoutingPolicy(
+            minimum_total_token_savings=args.minimum_total_token_savings,
+            minimum_main_token_savings=args.minimum_main_token_savings,
+            enforce_token_gates=args.enforce_token_gates,
+            require_lean_executive_usage=not args.allow_unaccounted_lean_executive,
+        ),
     )
-    payload = asdict(decision)
-    payload["selected_route"] = decision.selected_route.value
-    payload["savings_ratio"] = str(decision.savings_ratio)
-    payload["selected_route_usd"] = str(decision.selected_route_usd)
-    payload["direct_baseline_usd"] = str(decision.direct_baseline_usd)
-    payload["candidate_delegated_usd"] = (
-        None
-        if decision.candidate_delegated_usd is None
-        else str(decision.candidate_delegated_usd)
-    )
-    payload.pop("direct_forecast", None)
-    payload.pop("candidate_forecast", None)
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    print(json.dumps(decision.to_mapping(), indent=2, sort_keys=True))
     return 0
 
 
