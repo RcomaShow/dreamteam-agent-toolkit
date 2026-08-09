@@ -3,12 +3,12 @@
   "owner": {
     "name": "RcomaShow"
   },
-  "description": "DreamTeam adapters for usable fail-closed Lean, Opus-Sonnet, and Frontier orchestration with deterministic onboarding and independent verification.",
+  "description": "DreamTeam measurement-first adapters for fail-closed orchestration, bounded context, independent verification, and token-aware evaluation.",
   "plugins": [
     {
       "name": "dreamteam",
       "source": "./adapters/claude-code/plugins/dreamteam",
-      "description": "Claude Code orchestration with init, doctor, status, conservative USD routing, compact evidence, and quality-parity measurement.",
+      "description": "Claude Code orchestration with init, doctor, status, whole-tree routing, separate cost/token metrics, compact evidence, and paired quality gates.",
       "defaultEnabled": false
     }
   ]
