@@ -48,7 +48,7 @@ class EfficiencyMetrics:
     direct_payload_bytes: int = 0
     candidate_payload_bytes: int = 0
     handoff_tokens: Decimal = Decimal("0")
-    quality_parity: bool = True
+    quality_parity: bool = False
 
     def __post_init__(self) -> None:
         for name in (
