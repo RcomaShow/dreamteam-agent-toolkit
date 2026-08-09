@@ -185,6 +185,23 @@ def _savings(direct: Decimal, candidate: Decimal) -> Decimal:
     return (direct - candidate) / direct
 
 
+def _blocked_decision(decision: RouteDecision, reason: str) -> RouteDecision:
+    return replace(
+        decision,
+        selected_route=Route.BLOCKED,
+        selected_route_usd=decision.direct_baseline_usd,
+        candidate_delegated_usd=None,
+        savings_ratio=Decimal("0"),
+        reason_codes=(reason,),
+        candidate_forecast=None,
+        batch_eligible=False,
+        selected_agent_role=None,
+        support_agent_role=None,
+        execution_chain=(),
+        blocked=True,
+    )
+
+
 def _fallback_to_direct(
     decision: RouteDecision,
     config: RuntimeConfig,
@@ -240,6 +257,19 @@ def choose_route_v05(
         capabilities=capabilities,
         enforce_calibration=enforce_calibration,
     )
+    if is_lean:
+        configured_executive = resolve_model(config.models.executive, inherited="sonnet")
+        if configured_executive != resolve_model("sonnet"):
+            return V05RouteDecision(
+                decision=_blocked_decision(legacy, "LEAN_EXECUTIVE_MODEL_MUST_BE_SONNET"),
+                efficiency=None,
+                lean_executive_overhead_usd=Decimal("0"),
+                cost_gate_pass=False,
+                token_gate_pass=False,
+                token_gates_enforced=policy.enforce_token_gates,
+                empirical_claim_allowed=False,
+            )
+
     candidate = legacy.candidate_forecast
     overhead_usd = Decimal("0")
     lean_usage_present = False
