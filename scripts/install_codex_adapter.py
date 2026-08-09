@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 import shutil
+import tempfile
 from typing import Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,11 +14,34 @@ PROJECT_SOURCE = ROOT / "adapters/codex/AGENTS.md"
 SKILL_SOURCE = ROOT / "adapters/codex/skills/dreamteam-run/SKILL.md"
 
 
-def _copy_atomic(source: Path, target: Path) -> None:
+def _copy_atomic(source: Path, target: Path, *, force: bool) -> None:
+    """Publish source without following a pre-created predictable temp symlink."""
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_name(target.name + ".dreamteam.tmp")
-    shutil.copyfile(source, temporary)
-    temporary.replace(target)
+    with tempfile.NamedTemporaryFile(
+        mode="wb",
+        prefix=f".{target.name}.dreamteam-",
+        dir=target.parent,
+        delete=False,
+    ) as handle:
+        temporary = Path(handle.name)
+        with source.open("rb") as source_handle:
+            shutil.copyfileobj(source_handle, handle)
+        handle.flush()
+        os.fsync(handle.fileno())
+    try:
+        if force:
+            os.replace(temporary, target)
+            return
+        try:
+            # Hard-link publication is atomic and fails if the target appeared
+            # after the earlier existence check. It does not follow target symlinks.
+            os.link(temporary, target)
+        except FileExistsError as exc:
+            raise FileExistsError(f"target appeared during installation: {target}") from exc
+        temporary.unlink()
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def install_project(
@@ -38,7 +63,7 @@ def install_project(
     if target.exists() and not target.is_file():
         raise PermissionError("AGENTS.md target must be a regular file")
     if not dry_run:
-        _copy_atomic(PROJECT_SOURCE, target)
+        _copy_atomic(PROJECT_SOURCE, target, force=force)
     return target
 
 
@@ -57,7 +82,7 @@ def install_user_skill(
     if target.exists() and not target.is_file():
         raise PermissionError("DreamTeam skill target must be a regular file")
     if not dry_run:
-        _copy_atomic(SKILL_SOURCE, target)
+        _copy_atomic(SKILL_SOURCE, target, force=force)
     return target
 
 
