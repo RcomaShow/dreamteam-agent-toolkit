@@ -56,6 +56,20 @@ class CodexAdapterV05Tests(unittest.TestCase):
                 module.install_project(root, force=True)
             self.assertEqual(outside.read_text(encoding="utf-8"), "keep\n")
 
+    def test_user_skill_rejects_symlinked_parent(self):
+        module = load_installer()
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as outside_tmp:
+            home = Path(tmp)
+            outside = Path(outside_tmp)
+            skills = home / "skills"
+            try:
+                skills.symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are unavailable")
+            with self.assertRaisesRegex(PermissionError, "parent may not traverse symlinks"):
+                module.install_user_skill(home)
+            self.assertEqual(list(outside.rglob("*")), [])
+
     def test_target_appearing_during_publish_fails_closed(self):
         module = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
