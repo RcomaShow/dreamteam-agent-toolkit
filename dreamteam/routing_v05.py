@@ -114,36 +114,38 @@ def _component_tokens(component: CostComponent) -> Decimal:
     return Decimal(component.usage.total_tokens)
 
 
+def _is_worker_component(component: CostComponent) -> bool:
+    return component.name in {"haiku-worker", "frontier-haiku-worker"}
+
+
+def _is_retryable_component(component: CostComponent) -> bool:
+    # A bounded worker/lead/reviewer retry does not replay the root Lean executive session.
+    return component.name != "sonnet-executive-overhead"
+
+
 def _candidate_token_forecast(
     request: RouteRequest,
     candidate: RouteCostForecast,
-    *,
-    lean_executive_usage: TokenUsage | None,
 ) -> tuple[Decimal, Decimal]:
     base_total = sum((_component_tokens(item) for item in candidate.components), Decimal("0"))
     base_main = sum(
+        (_component_tokens(item) for item in candidate.components if not _is_worker_component(item)),
+        Decimal("0"),
+    )
+    retry_total = sum(
+        (_component_tokens(item) for item in candidate.components if _is_retryable_component(item)),
+        Decimal("0"),
+    ) * request.retry_probability
+    retry_main = sum(
         (
             _component_tokens(item)
             for item in candidate.components
-            if item.name != "haiku-worker"
-            and item.name != "frontier-haiku-worker"
+            if _is_retryable_component(item) and not _is_worker_component(item)
         ),
         Decimal("0"),
-    )
-
-    # The adjusted Lean executive is intentionally not inside the retry term:
-    # a bounded worker retry does not imply replaying the whole root session.
-    lean_total = Decimal("0")
-    if lean_executive_usage is not None:
-        lean_total = Decimal(lean_executive_usage.total_tokens)
-
-    retry_total = base_total * request.retry_probability
-    retry_main = base_main * request.retry_probability
+    ) * request.retry_probability
     fallback = Decimal(request.direct_usage.total_tokens) * request.escalation_probability
-    return (
-        base_total + lean_total + retry_total + fallback,
-        base_main + lean_total + retry_main + fallback,
-    )
+    return base_total + retry_total + fallback, base_main + retry_main + fallback
 
 
 def _with_lean_executive(
@@ -240,11 +242,11 @@ def choose_route_v05(
     )
     candidate = legacy.candidate_forecast
     overhead_usd = Decimal("0")
-    lean_usage: TokenUsage | None = None
+    lean_usage_present = False
 
     if is_lean and candidate is not None and request.executive_usage.total_tokens:
         candidate, overhead_usd = _with_lean_executive(candidate, request, config)
-        lean_usage = request.executive_usage
+        lean_usage_present = True
 
     savings = (
         legacy.savings_ratio
@@ -260,7 +262,7 @@ def choose_route_v05(
 
     delegated = legacy.selected_route not in {Route.MAIN_DIRECT, Route.BLOCKED}
     reasons = tuple(legacy.reason_codes)
-    if delegated and is_lean and policy.require_lean_executive_usage and lean_usage is None:
+    if delegated and is_lean and policy.require_lean_executive_usage and not lean_usage_present:
         decision = _fallback_to_direct(
             decision,
             config,
@@ -298,13 +300,7 @@ def choose_route_v05(
     efficiency: EfficiencyMetrics | None = None
     token_gate_pass = False
     if candidate is not None:
-        candidate_total, candidate_main = _candidate_token_forecast(
-            request,
-            candidate,
-            # candidate already contains the Lean executive component after adjustment,
-            # so do not add it a second time.
-            lean_executive_usage=None,
-        )
+        candidate_total, candidate_main = _candidate_token_forecast(request, candidate)
         direct_tokens = Decimal(request.direct_usage.total_tokens)
         efficiency = EfficiencyMetrics(
             direct_cost_usd=legacy.direct_baseline_usd,
