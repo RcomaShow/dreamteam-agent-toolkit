@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "dreamteam",
   "displayName": "DreamTeam",
-  "version": "0.4.5",
-  "description": "Usable fail-closed orchestration with Lean, Opus-Sonnet, and Frontier topologies, deterministic onboarding, bound handoffs, and measured USD routing.",
+  "version": "0.5.0",
+  "description": "Measurement-first fail-closed orchestration with whole-tree cost accounting, token telemetry, bound handoffs, and paired quality gates.",
   "author": {
     "name": "RcomaShow",
     "url": "https://github.com/RcomaShow"
@@ -15,6 +15,7 @@
     "agents",
     "orchestration",
     "token-optimization",
+    "measurement",
     "cost-routing",
     "claude-code",
     "multi-model"
