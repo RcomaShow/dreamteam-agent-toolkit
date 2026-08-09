@@ -8,6 +8,7 @@ from typing import Any, Iterable, Mapping
 
 from .benchmark import PairResult, summarize as summarize_v04
 from .measurement import savings_ratio
+from .pricing import resolve_model
 
 
 @dataclass(frozen=True)
@@ -54,6 +55,26 @@ def _distribution(values: list[Decimal]) -> tuple[Decimal, Decimal, Decimal]:
     return med, mean, p10
 
 
+def _validate_v05_pair_semantics(pair: PairResult) -> None:
+    """Reject 0.4-compatible benchmark rows that omit 0.5 whole-tree overhead."""
+    dreamteam = pair.dreamteam
+    if dreamteam.topology != "lean":
+        return
+    if dreamteam.route not in {"HAIKU_DISCOVERY", "HAIKU_EXECUTE"}:
+        return
+    models = {resolve_model(record.model) for record in dreamteam.model_usage}
+    required = {"claude-sonnet-5", "claude-haiku-4-5"}
+    if not required.issubset(models):
+        raise ValueError(
+            "0.5 Lean delegated benchmark requires explicit Sonnet executive "
+            "and Haiku worker usage"
+        )
+    if dreamteam.main_tokens <= 0 or dreamteam.worker_tokens <= 0:
+        raise ValueError(
+            "0.5 Lean delegated benchmark requires non-zero main and worker tokens"
+        )
+
+
 def _pair_token_metrics(pair: PairResult) -> tuple[Decimal, Decimal]:
     direct_total = Decimal(pair.direct.main_tokens + pair.direct.worker_tokens)
     dreamteam_total = Decimal(pair.dreamteam.main_tokens + pair.dreamteam.worker_tokens)
@@ -81,6 +102,8 @@ def summarize_v05(
         raise ValueError("minimum_samples must be a positive integer")
 
     items = list(pairs)
+    for pair in items:
+        _validate_v05_pair_semantics(pair)
     base = summarize_v04(
         items,
         minimum_savings_margin=minimum_cost_savings_margin,
