@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the exact DreamTeam 0.4.5 plugin ZIP in an isolated directory."""
+"""Smoke-test the exact DreamTeam 0.5.0 plugin ZIP in an isolated directory."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ import sys
 import tempfile
 import zipfile
 
-EXPECTED_VERSION = "0.4.5"
+EXPECTED_VERSION = "0.5.0"
 
 
 def safe_member(name: str) -> bool:
@@ -71,6 +71,9 @@ def main() -> int:
         for required in (
             "lib/dreamteam/config.py",
             "lib/dreamteam/routing.py",
+            "lib/dreamteam/routing_v05.py",
+            "lib/dreamteam/measurement.py",
+            "lib/dreamteam/benchmark_v05.py",
             "lib/dreamteam/ledger.py",
             "lib/dreamteam/protocol.py",
             "lib/dreamteam/operations.py",
@@ -85,6 +88,7 @@ def main() -> int:
             "skills/init/SKILL.md",
             "skills/doctor/SKILL.md",
             "skills/status/SKILL.md",
+            "skills/run/SKILL.md",
             "agents/execution-sonnet-lead.md",
             "agents/verification-independent-reviewer.md",
         ):
@@ -223,8 +227,14 @@ def main() -> int:
             env=env,
         )
         payload = json.loads(routed.stdout)
+        if payload["router_version"] != "0.5":
+            raise ValueError("plugin smoke route did not use the 0.5 router")
         if payload["selected_agent_role"] != "verification-independent-reviewer":
             raise ValueError("Opus-Sonnet smoke route did not select the Sonnet reviewer")
+        if "token_forecast" not in payload:
+            raise ValueError("0.5 route did not expose token telemetry")
+        if payload["empirical_claim_allowed"] is not False:
+            raise ValueError("forecast route must not claim empirical savings")
 
         (project / "a.py").write_text("a\n", encoding="utf-8")
         strict = json.loads(config.read_text(encoding="utf-8"))
